@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar color="transparent" elevate-on-scroll flat>
       <v-spacer />
-      <v-btn v-show="!loged" outlined rounded @click="login()">
+      <v-btn variant="outlined" rounded  @click="login()" >
         <v-icon color="grey" class="pr-2"> mdi-airballoon </v-icon>
         LOGIN
       </v-btn>
@@ -45,43 +45,26 @@
     <v-main>
       <slot />
     </v-main>
-    <v-footer :absolute="!fixed" app>
+    <v-footer >
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer>
   </v-app>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      clipped: false,
-      overlay: false,
-      drawer: false,
-      fixed: false,
-      loged: true,
-      items: [
-        {
-          icon: 'mdi-apps',
-          title: 'Welcome',
-          to: '/',
-        },
-        {
-          icon: 'mdi-chart-bubble',
-          title: 'Inspire',
-          to: '/inspire',
-        },
-      ],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: 'Vuetify.js',
+<script setup>
+
+const loged = ref(false)
+
+async function login() {
+    if (!window.ethereum) {
+        alert("MetaMask not installed  :(");
+    } else {
+        let accounts = await window.ethereum.request({
+            method: "eth_requestAccounts"
+        });
+        loged.value = true
+        console.log(accounts)
     }
-  },
-  methods: {
-    logout() {
-      this.$store.commit('LOGIN', false)
-    },
-  },
 }
+
 </script>
