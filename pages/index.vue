@@ -106,6 +106,7 @@ export default {
     locationAirballon: [0, 0],
     hexStart: '',
     markerInit: {},
+    popup: {},
     map: {},
     coordinates: [],
     lands: [],
@@ -157,12 +158,17 @@ export default {
   },
   methods: {
     onDragEnd() {
-      this.map.setLayoutProperty('point', 'visibility', 'none')
       const lngLat = this.markerInit.getLngLat();
+
+      //this.map.setLayoutProperty('point', 'visibility', 'none')
       this.locationAirballon = [lngLat.lng, lngLat.lat]
-      this.point.features[0].geometry.coordinates = [lngLat.lng, lngLat.lat]
-      this.map.getSource('point').setData(this.point)
-      this.map.setLayoutProperty('point', 'visibility', 'visible')
+      /* this.popup = new mapboxgl.Popup()
+        .setLngLat({ lon: lngLat.lng, lat: lngLat.lat })
+        .setHTML(`<img heigth="50" width="50" src=${this.imageAirBallon}><img>`)
+        .addTo(this.map); */
+      //this.point.features[0].geometry.coordinates = [lngLat.lng, lngLat.lat]
+      //this.map.getSource('point').setData(this.point)
+      //this.map.setLayoutProperty('point', 'visibility', 'visible')
     },
     seeAll() {
       let points = {
@@ -198,6 +204,9 @@ export default {
       return arr[Math.round(((deg + 180) % 360) / 45)]
     },
     async seeAirballon(item) {
+      if (this.userAirBallons.includes(item)) {
+        console.log("crash")
+      }
       this.markerInit.remove();
       this.showInfo = true
       console.log(JSON.parse(JSON.stringify(item.route)))
@@ -233,19 +242,28 @@ export default {
         console.log(error)
       }
     },
-    chooseAirBallon(imageIn) {
-      this.markerInit.remove();
+
+    setMarker() {
+
       const { lng, lat } = this.map.getCenter();
       this.markerInit = new mapboxgl.Marker({
 
         draggable: true
       })
+        .setPopup(new mapboxgl.Popup().setHTML(`<img heigth="50" width="50" src=${this.imageAirBallon}><img>`))
         .setLngLat([lng, lat])
-        .addTo(this.map);
+        .addTo(this.map)
+        .togglePopup();
 
       this.markerInit.on('dragend', this.onDragEnd);
 
+    },
+    chooseAirBallon(imageIn) {
+      this.markerInit.remove()
       this.imageAirBallon = imageIn
+      this.setMarker()
+
+
       this.map.setLayoutProperty('point', 'visibility', 'none')
       this.map.loadImage(imageIn, (error, image) => {
         if (error) throw error
@@ -276,29 +294,38 @@ export default {
           route: [this.locationAirballon],
         }
       })
+      this.markerInit.remove()
     },
   },
   async mounted() {
-
     const supabase = useSupabaseClient()
-    let { data, error } = await supabase
-      .from('airballoons')
-      .select('*')
-    this.userAirBallons = data
 
-    const airballoons = supabase.channel('custom-all-channel')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'airballoons' },
-        async (payload) => {
-          /* let { data, error } = await supabase
-            .from('airballoons')
-            .select('*')
-          this.userAirBallons = data  */
-          //console.log('Change received!', payload)
-        }
-      )
-      .subscribe()
+    setInterval(async () => {
+      let { data, error } = await supabase
+        .from('airballoons')
+        .select('*')
+      this.userAirBallons = data
+    }, 1000);
+
+
+
+    //update poll
+
+    /*  const airballoons = supabase.channel('custom-all-channel')
+       .on(
+         'postgres_changes',
+         { event: '*', schema: 'public', table: 'airballoons' },
+         async (payload) => {
+           /* let { data, error } = await supabase
+             .from('airballoons')
+             .select('*')
+           this.userAirBallons = data 
+           //console.log('Change received!', payload)
+         }
+       )
+       .subscribe()
+  */
+
     mapboxgl.accessToken =
       'pk.eyJ1Ijoic3Rvcm1ibGF4IiwiYSI6ImNrb2Z6a2F3bzBib3gyb3BucDV5eG1maXoifQ.BgKgtZQJa5m1xOXGNuJfjw'
 
@@ -311,14 +338,8 @@ export default {
       attributionControl: false,
     })
 
-    this.markerInit = new mapboxgl.Marker({
+    this.setMarker()
 
-      draggable: true
-    })
-      .setLngLat([0, 0])
-      .addTo(this.map);
-
-    this.markerInit.on('dragend', this.onDragEnd);
 
 
     /*  const geolocate = new mapboxgl.GeolocateControl({

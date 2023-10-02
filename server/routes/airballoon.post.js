@@ -4,6 +4,12 @@ import axios from "axios";
 
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient(event);
+  const body = await readBody(event);
+  const { data, error } = await supabase
+    .from("airballoons")
+    .insert([body])
+    .select();
+  if (error) console.log(error);
   async function loadRoute(airBallon) {
     let routeTemp = {
       type: "FeatureCollection",
@@ -49,16 +55,15 @@ export default defineEventHandler(async (event) => {
         if (counter >= steps) {
           airBallon.route.push(airBallon.point);
           loadRoute(airBallon);
+          // Realizar la inserción en la base de datos después de cada iteración
         } else {
           airBallon.point = routeTemp.features[0].geometry.coordinates[counter];
           let routeTemp2 = airBallon.route.concat([airBallon.point]);
           let line = turf.lineString(routeTemp2);
           airBallon.kilometers = turf.length(line);
-          counter = counter + 1;
+          counter++;
         }
         airBallon.state = true;
-
-        // Realizar la inserción en la base de datos después de cada iteración
         const { data, error } = await supabase
           .from("airballoons")
           .upsert(airBallon)
@@ -73,13 +78,6 @@ export default defineEventHandler(async (event) => {
     }
     animate();
   }
-
-  const body = await readBody(event);
-  const { data, error } = await supabase
-    .from("airballoons")
-    .insert([body])
-    .select();
-  if (error) console.log(error);
   loadRoute(data[0]);
   return data;
 });
