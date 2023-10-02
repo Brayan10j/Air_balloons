@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     );
     let destination = turf.destination(
       airBallon.point,
-      0.25,
+      1,
       infoWeather.data.wind.deg - 180
     );
     let speed = infoWeather.data.wind.speed * 3.6;
@@ -40,15 +40,20 @@ export default defineEventHandler(async (event) => {
     ];
 
     const lineDistance = turf.length(routeTemp.features[0]);
+  
     const arc = [];
 
     let steps = (lineDistance / speed) * 3600;
+    console.log(steps)
+    
+    for (let i = 0; i <= steps; i ++) {
+      const disXseg =  lineDistance / steps
 
-    for (let i = 0; i < lineDistance; i += lineDistance / steps) {
-      const segment = turf.along(routeTemp.features[0], i);
+      const segment = turf.along(routeTemp.features[0], i * disXseg);
       arc.push(segment.geometry.coordinates);
     }
     routeTemp.features[0].geometry.coordinates = arc;
+    
 
     async function animate() {
       try {
@@ -62,6 +67,7 @@ export default defineEventHandler(async (event) => {
           let line = turf.lineString(routeTemp2);
           airBallon.kilometers = turf.length(line);
           counter++;
+          setTimeout(animate, 1000);
         }
         airBallon.state = true;
         const { data, error } = await supabase
@@ -70,7 +76,7 @@ export default defineEventHandler(async (event) => {
           .select();
 
         // Llamar a la próxima iteración después de un segundo
-        setTimeout(animate, 1000);
+        
       } catch (error) {
         console.log(error);
         airBallon.state = false;
