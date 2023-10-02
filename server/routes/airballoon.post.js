@@ -27,22 +27,19 @@ export default defineEventHandler(async (event) => {
       infoWeather.data.wind.deg - 180
     );
     let speed = infoWeather.data.wind.speed * 3.6;
-    //infoWeather.wind.speed * 3.6 <= 20;
     let newDestination = destination.geometry.coordinates;
     let counter = 0;
     routeTemp.features[0].geometry.coordinates = [
       airBallon.point,
       newDestination,
     ];
-    // Calculate the distance in kilometers between route start/end point.
+
     const lineDistance = turf.length(routeTemp.features[0]);
     const arc = [];
-    // Number of steps to use in the arc and animation, more steps means
-    // a smoother arc and animation, but too many steps will result in a
-    // low frame rate
+    
 
-    let steps = (lineDistance / speed) * 3600; // time on seg
-    // Draw an arc between the `origin` & `destination` of the two points
+    let steps = (lineDistance / speed) * 3600; 
+
     for (let i = 0; i < lineDistance; i += lineDistance / steps) {
       const segment = turf.along(routeTemp.features[0], i);
       arc.push(segment.geometry.coordinates);

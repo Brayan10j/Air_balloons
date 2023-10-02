@@ -17,6 +17,7 @@
   "dependencies": {
     "@nuxtjs/supabase": "^1.1.2",
     "@turf/turf": "^6.5.0",
+    "axios": "^1.5.1",
     "h3-js": "^4.1.0",
     "nuxt-vuetify": "^1.0.1"
   }
