@@ -44,7 +44,6 @@ export default defineEventHandler(async (event) => {
     const arc = [];
 
     let steps = (lineDistance / speed) * 3600;
-    console.log(steps)
     
     for (let i = 0; i <= steps; i ++) {
       const disXseg =  lineDistance / steps
