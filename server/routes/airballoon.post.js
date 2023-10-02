@@ -1,7 +1,6 @@
 import { serverSupabaseClient } from "#supabase/server";
-import * as turf from '@turf/turf'
+import * as turf from "@turf/turf";
 import axios from "axios";
-
 
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient(event);
@@ -36,9 +35,8 @@ export default defineEventHandler(async (event) => {
 
     const lineDistance = turf.length(routeTemp.features[0]);
     const arc = [];
-    
 
-    let steps = (lineDistance / speed) * 3600; 
+    let steps = (lineDistance / speed) * 3600;
 
     for (let i = 0; i < lineDistance; i += lineDistance / steps) {
       const segment = turf.along(routeTemp.features[0], i);
@@ -54,26 +52,28 @@ export default defineEventHandler(async (event) => {
         } else {
           airBallon.point = routeTemp.features[0].geometry.coordinates[counter];
           let routeTemp2 = airBallon.route.concat([airBallon.point]);
-          var line = turf.lineString(routeTemp2);
+          let line = turf.lineString(routeTemp2);
           airBallon.kilometers = turf.length(line);
-          setTimeout(() => {
-            counter = counter + 1;
-            animate();
-          }, 1000);
+          counter = counter + 1;
         }
         airBallon.state = true;
+
+        // Realizar la inserción en la base de datos después de cada iteración
+        const { data, error } = await supabase
+          .from("airballoons")
+          .upsert(airBallon)
+          .select();
+
+        // Llamar a la próxima iteración después de un segundo
+        setTimeout(animate, 1000);
       } catch (error) {
         console.log(error);
         airBallon.state = false;
       }
-      const { data, error } = await supabase
-        .from("airballoons")
-        .upsert(airBallon)
-        .select();
     }
     animate();
   }
-  
+
   const body = await readBody(event);
   const { data, error } = await supabase
     .from("airballoons")

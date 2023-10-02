@@ -291,10 +291,10 @@ export default {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'airballoons' },
         async (payload) => {
-          let { data, error } = await supabase
+          /* let { data, error } = await supabase
             .from('airballoons')
             .select('*')
-          this.userAirBallons = data
+          this.userAirBallons = data  */
           //console.log('Change received!', payload)
         }
       )
