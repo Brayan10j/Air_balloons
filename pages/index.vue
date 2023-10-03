@@ -1,7 +1,31 @@
 <template>
-  <v-container fluid>
+  <v-container>
     <v-row>
-      <v-col>
+      <v-col cols="12">
+        <v-card>
+          <v-card-text>
+            <v-row>
+              <v-col v-for="(item, index) in airBallons" :key="index">
+                <v-card color="white" @click="chooseAirBallon(item.image)">
+                  <v-sheet color="white" rounded class="mx-auto" height="50" width="50"><v-img class="mx-auto"
+                      :src="item.image"> </v-img></v-sheet>
+                </v-card>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-container id="map" fluid style="height: 65vh">
+
+              </v-container>
+            </v-row>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
+              Go
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+      <!--  <v-col>
         <v-card width="500" v-show="showInfo" class="mx-auto">
           <v-row>
             <v-col>
@@ -19,64 +43,36 @@
             </v-col>
           </v-row>
         </v-card>
-        <br />
-        <v-container id="map" fluid fill-heigh style="height: 80vh" />
-        <br />
         <v-btn color="blue" @click="seeAll()"> See all</v-btn>
-      </v-col>
+      </v-col> -->
       <v-col>
-        <v-row>
-          <v-col>
-            <v-card class="mx-auto">
-              <v-card-text>
-                <v-row>
-                  <v-col v-for="(item, index) in airBallons" :key="index">
-                    <v-card color="white" @click="chooseAirBallon(item.image)">
-                      <v-sheet color="white" rounded class="mx-auto" height="80" width="80"><v-img class="mx-auto"
-                          :src="item.image"> </v-img></v-sheet>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
-                  Go
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-table height="320px" fixed-header>
-              <thead>
-                <tr>
-                  <th class="text-left">
-                    Air-balloon
-                  </th>
-                  <th class="text-left">
-                    Kilometers
-                  </th>
-                  <th class="text-left">
-                    State
-                  </th>
-                  <th class="text-left">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in userAirBallons" :key="item.id">
-                  <td><v-avatar :image="item.image"></v-avatar></td>
-                  <td>{{ item.kilometers }}
-                  </td>
-                  <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-                  <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
-                </tr>
-              </tbody>
-            </v-table>
-          </v-col>
-        </v-row>
+        <v-table height="320px" fixed-header>
+          <thead>
+            <tr>
+              <th class="text-left">
+                Air-balloon
+              </th>
+              <th class="text-left">
+                Kilometers
+              </th>
+              <th class="text-left">
+                State
+              </th>
+              <th class="text-left">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in userAirBallons" :key="item.id">
+              <td><v-avatar :image="item.image"></v-avatar></td>
+              <td>{{ item.kilometers.toFixed(2) }}
+              </td>
+              <td>{{ item.state ? 'Live' : 'Crash' }}</td>
+              <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
+            </tr>
+          </tbody>
+        </v-table>
       </v-col>
     </v-row>
     <v-dialog v-model="dialogReanudate" persistent max-width="500">
@@ -106,6 +102,7 @@ export default {
     locationAirballon: [0, 0],
     hexStart: '',
     markerInit: {},
+    genesisArray: [],
     popup: {},
     map: {},
     coordinates: [],
@@ -204,12 +201,9 @@ export default {
       return arr[Math.round(((deg + 180) % 360) / 45)]
     },
     async seeAirballon(item) {
-      if (this.userAirBallons.includes(item)) {
-        console.log("crash")
-      }
+
       this.markerInit.remove();
       this.showInfo = true
-      console.log(JSON.parse(JSON.stringify(item.route)))
       try {
         const { data } = await useFetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${item.point[1]}&lon=${item.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
@@ -238,6 +232,12 @@ export default {
         this.map.getSource('point').setData(this.point)
         this.map.getSource('routeBefore').setData(this.routeBefore)
         //this.map.setLayoutProperty('routeBefore', 'visibility', 'visible')
+        let x = this.genesisArray.find((a) => a.id == item.id)
+        if (x.kilometers == item.kilometers) {
+          this.reanudate(item)
+          console.log("crash")
+
+        }
       } catch (error) {
         console.log(error)
       }
@@ -263,7 +263,7 @@ export default {
       this.imageAirBallon = imageIn
       this.setMarker()
 
-
+/* 
       this.map.setLayoutProperty('point', 'visibility', 'none')
       this.map.loadImage(imageIn, (error, image) => {
         if (error) throw error
@@ -271,15 +271,15 @@ export default {
         // Add the image to the map style.
         this.map.updateImage('airBallon', image)
       })
-      this.map.setLayoutProperty('point', 'visibility', 'visible')
+      this.map.setLayoutProperty('point', 'visibility', 'visible') */
     },
-    async reanudate(id) {
+    async reanudate(item) {
       try {
-
-        this.dialogReanudate = false
+        const { data } = await useFetch('/airballoon', {
+          method: "POST", body: item
+        })
       } catch (error) {
         alert(error.message)
-        this.dialogReanudate = false
       }
     },
     async flyAirballon() {
@@ -300,12 +300,17 @@ export default {
   async mounted() {
     const supabase = useSupabaseClient()
 
+    let { data, error } = await supabase
+      .from('airballoons')
+      .select('*')
+    this.genesisArray = data
+
     setInterval(async () => {
       let { data, error } = await supabase
         .from('airballoons')
         .select('*')
       this.userAirBallons = data
-    }, 1000);
+    }, 3000);
 
 
 

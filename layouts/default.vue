@@ -1,17 +1,19 @@
 <template>
   <v-app>
-    <v-app-bar color="transparent" elevate-on-scroll flat>
+    <v-app-bar color="transparent" scroll-behavior="hide" flat>
+
       <v-spacer />
-      <v-btn variant="outlined" rounded  @click="login()" >
+      <v-btn v-show="!loged" variant="outlined" rounded @click="login()" size="small">
         <v-icon color="grey" class="pr-2"> mdi-airballoon </v-icon>
         LOGIN
       </v-btn>
+      <v-btn v-show="loged" icon>
+        <v-icon color="grey"> mdi-airballoon </v-icon>
+      </v-btn>
       <v-menu bottom min-width="200px" rounded offset-y>
-        <template >
-          <v-btn v-show="loged" icon x-large >
-            <v-avatar color="transparent">
-              <v-icon> mdi-account-circle </v-icon>
-            </v-avatar>
+        <template>
+          <v-btn icon>
+            <v-icon color="grey" class="pr-2"> mdi-airballoon </v-icon>
           </v-btn>
         </template>
         <v-card>
@@ -45,7 +47,21 @@
     <v-main>
       <slot />
     </v-main>
-    <v-footer >
+   <!--  <v-bottom-navigation :elevation="0"  grow>
+      <v-btn value="world">
+        <v-icon>mdi-earth</v-icon>
+
+        <span>World</span>
+      </v-btn>
+
+      <v-btn value="nearby">
+        <v-icon>mdi-map-marker</v-icon>
+
+        <span>Nearby</span>
+      </v-btn>
+    </v-bottom-navigation> -->
+
+    <v-footer>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer>
   </v-app>
@@ -56,15 +72,15 @@
 const loged = ref(false)
 
 async function login() {
-    if (!window.ethereum) {
-        alert("MetaMask not installed  :(");
-    } else {
-        let accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-        loged.value = true
-        console.log(accounts)
-    }
+  if (!window.ethereum) {
+    alert("MetaMask not installed  :(");
+  } else {
+    let accounts = await window.ethereum.request({
+      method: "eth_requestAccounts"
+    });
+    loged.value = true
+    console.log(accounts)
+  }
 }
 
 </script>

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const { data, error } = await supabase
     .from("airballoons")
-    .insert([body])
+    .upsert(body)
     .select();
   if (error) console.log(error);
   async function loadRoute(airBallon) {
@@ -40,19 +40,18 @@ export default defineEventHandler(async (event) => {
     ];
 
     const lineDistance = turf.length(routeTemp.features[0]);
-  
+
     const arc = [];
 
     let steps = (lineDistance / speed) * 3600;
-    
-    for (let i = 0; i <= steps; i ++) {
-      const disXseg =  lineDistance / steps
+
+    for (let i = 0; i <= steps; i++) {
+      const disXseg = lineDistance / steps;
 
       const segment = turf.along(routeTemp.features[0], i * disXseg);
       arc.push(segment.geometry.coordinates);
     }
     routeTemp.features[0].geometry.coordinates = arc;
-    
 
     async function animate() {
       try {
@@ -65,17 +64,16 @@ export default defineEventHandler(async (event) => {
           let routeTemp2 = airBallon.route.concat([airBallon.point]);
           let line = turf.lineString(routeTemp2);
           airBallon.kilometers = turf.length(line);
-          counter++;
-          setTimeout(animate, 1000);
+          counter +=3;
+
+          setTimeout(animate, 3000);
         }
-        airBallon.state = true;
         const { data, error } = await supabase
           .from("airballoons")
           .upsert(airBallon)
           .select();
 
         // Llamar a la próxima iteración después de un segundo
-        
       } catch (error) {
         console.log(error);
         airBallon.state = false;
