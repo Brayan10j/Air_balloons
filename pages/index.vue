@@ -1,19 +1,42 @@
 <template>
   <v-container>
+    <v-row justify="center" align="center">
+
+      <v-col> <v-btn block class="mx-auto" @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn> </v-col>
+    </v-row>
     <v-row>
+
       <v-col cols="12">
         <v-card>
           <v-card-text>
             <v-row>
-              <v-col v-for="(item, index) in airBallons" :key="index">
-                <v-card color="white" @click="chooseAirBallon(item.image)">
-                  <v-sheet color="white" rounded class="mx-auto" height="50" width="50"><v-img class="mx-auto"
-                      :src="item.image"> </v-img></v-sheet>
+              <v-col cols="2" v-for="(item, index) in airBallons" :key="index">
+                <v-card color="white">
+                  <v-img class="mx-auto" width="50" @click="chooseAirBallon(item.image)" :src="item.image"> </v-img>
                 </v-card>
               </v-col>
             </v-row>
             <v-row>
-              <v-container id="map" fluid style="height: 65vh">
+              <v-card width="500" v-show="showInfo" class="mx-auto">
+                <v-row>
+                  <v-col>
+                    <v-icon>mdi-water</v-icon>
+                    {{ infoAirballon.humidity }} %
+                  </v-col>
+                  <v-col>
+                    <v-icon>mdi-arrow-up-bold mdi-rotate-{{ infoAirballon.wind }}</v-icon>
+                    {{ infoAirballon.speed.toFixed(2) }} km/h
+                  </v-col>
+                  <v-col>
+                    <v-icon>mdi-thermometer</v-icon>
+                    {{ infoAirballon.temp }} &deg;C
+                    <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon>
+                  </v-col>
+                </v-row>
+              </v-card>
+            </v-row>
+            <v-row>
+              <v-container id="map" fluid style="height: 55vh">
 
               </v-container>
             </v-row>
@@ -26,23 +49,7 @@
         </v-card>
       </v-col>
       <!--  <v-col>
-        <v-card width="500" v-show="showInfo" class="mx-auto">
-          <v-row>
-            <v-col>
-              <v-icon>mdi-water</v-icon>
-              {{ infoAirballon.humidity }} %
-            </v-col>
-            <v-col>
-              <v-icon>mdi-arrow-up-bold mdi-rotate-{{ infoAirballon.wind }}</v-icon>
-              {{ infoAirballon.speed.toFixed(2) }} km/h
-            </v-col>
-            <v-col>
-              <v-icon>mdi-thermometer</v-icon>
-              {{ infoAirballon.temp }} &deg;C
-              <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon>
-            </v-col>
-          </v-row>
-        </v-card>
+       
         <v-btn color="blue" @click="seeAll()"> See all</v-btn>
       </v-col> -->
       <v-col>
@@ -114,22 +121,23 @@ export default {
     kilometers: 0,
     airBallons: [
       {
+        id: "1",
         image: '/Globos/1.png',
       },
       {
-        image: '/Globos/2.png',
+        id: "2", image: '/Globos/2.png',
       },
       {
-        image: '/Globos/3.png',
+        id: "3", image: '/Globos/3.png',
       },
       {
-        image: '/Globos/4.png',
+        id: "4", image: '/Globos/4.png',
       },
       {
-        image: '/Globos/5.png',
+        id: "5", image: '/Globos/5.png',
       },
       {
-        image: '/Globos/6.png',
+        id: "6", image: '/Globos/6.png',
       },
     ],
     showInfo: false,
@@ -168,33 +176,26 @@ export default {
       //this.map.setLayoutProperty('point', 'visibility', 'visible')
     },
     seeAll() {
+      this.markerInit.remove();
+      const arrayFeatures = this.userAirBallons.map((a) => {
+        return {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'Point',
+            'coordinates': a.point
+          },
+          'properties': {
+            'image-name': a.image,
+          }
+        }
+      })
       let points = {
         type: 'FeatureCollection',
-        features: [
-          /* {
-            'type': 'Feature',
-            'geometry': {
-              'type': 'Point',
-              'coordinates': [40, -10]
-            },
-            'properties': {
-              'image-name': 'popup-debug',
-              'name': 'Line 1\nLine 2\nLine 3'
-            }
-          }, */
-          {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'MultiPoint',
-              coordinates: this.pointUserAirballoons,
-            },
-          },
-        ],
+        features: arrayFeatures,
       }
-      this.map.setLayoutProperty('point', 'visibility', 'none')
-      this.map.setLayoutProperty('point', 'visibility', 'visible')
-      this.map.getSource('point').setData(points)
+      this.map.setLayoutProperty('allPoints', 'visibility', 'none')
+      this.map.getSource('allPoints').setData(points)
+      this.map.setLayoutProperty('allPoints', 'visibility', 'visible')
     },
     wintdeg(deg) {
       let arr = [0, 45, 90, 135, 180, 225, 270, 315]
@@ -263,15 +264,15 @@ export default {
       this.imageAirBallon = imageIn
       this.setMarker()
 
-/* 
-      this.map.setLayoutProperty('point', 'visibility', 'none')
-      this.map.loadImage(imageIn, (error, image) => {
-        if (error) throw error
-
-        // Add the image to the map style.
-        this.map.updateImage('airBallon', image)
-      })
-      this.map.setLayoutProperty('point', 'visibility', 'visible') */
+      /* 
+            this.map.setLayoutProperty('point', 'visibility', 'none')
+            this.map.loadImage(imageIn, (error, image) => {
+              if (error) throw error
+      
+              // Add the image to the map style.
+              this.map.updateImage('airBallon', image)
+            })
+            this.map.setLayoutProperty('point', 'visibility', 'visible') */
     },
     async reanudate(item) {
       try {
@@ -343,6 +344,24 @@ export default {
       attributionControl: false,
     })
 
+    this.airBallons.map((a, i) => {
+      this.map.loadImage(`/Globos/${i + 1}.png`, (error, image) => {
+        if (error) throw error
+
+        // Add the image to the map styl
+        this.map.addImage(`/Globos/${i + 1}.png`, image)
+      })
+    })
+
+    await this.map.loadImage(`/Globos/1.png`, (error, image) => {
+      if (error) throw error
+
+      // Add the image to the map style.
+      this.map.addImage(`airBallon`, image)
+    }
+    )
+
+
     this.setMarker()
 
 
@@ -380,13 +399,12 @@ export default {
       type: 'FeatureCollection',
       features: [
         {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'MultiPoint',
-            coordinates: [],
+          'type': 'Feature',
+          'geometry': {
+            'type': 'Point',
+            'coordinates': []
           },
-        },
+        }
       ],
     }
     this.routeBefore = {
@@ -410,13 +428,8 @@ export default {
     })
 
 
-    this.map.on('load', () => {
-      this.map.loadImage('/Globos/3.png', (error, image) => {
-        if (error) throw error
+    this.map.on('load', async () => {
 
-        // Add the image to the map style.
-        this.map.addImage('airBallon', image)
-      })
       this.map.addSource('routeBefore', {
         type: 'geojson',
         data: this.routeBefore,
@@ -425,6 +438,25 @@ export default {
       this.map.addSource('point', {
         type: 'geojson',
         data: this.point,
+      })
+
+      this.map.addSource('allPoints', {
+        type: 'geojson',
+        data: points,
+      })
+
+      this.map.addLayer({
+        id: 'allPoints',
+        source: 'allPoints',
+        type: 'symbol',
+        layout: {
+          'icon-image': ["get", "image-name"],
+          'icon-size': 0.1,
+          'icon-rotation-alignment': 'map',
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        maxzoom: 14,
       })
 
       this.map.addLayer({
