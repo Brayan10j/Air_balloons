@@ -193,6 +193,7 @@ export default {
         type: 'FeatureCollection',
         features: arrayFeatures,
       }
+      this.map.setLayoutProperty('point', 'visibility', 'none')
       this.map.setLayoutProperty('allPoints', 'visibility', 'none')
       this.map.getSource('allPoints').setData(points)
       this.map.setLayoutProperty('allPoints', 'visibility', 'visible')
@@ -219,6 +220,7 @@ export default {
           zoom: 1,
         })
         this.map.setLayoutProperty('point', 'visibility', 'none')
+        this.map.setLayoutProperty('allPoints', 'visibility', 'none')
         this.map.loadImage(item.image, (error, image) => {
           if (error) throw error
 
@@ -236,7 +238,6 @@ export default {
         let x = this.genesisArray.find((a) => a.id == item.id)
         if (x.kilometers == item.kilometers) {
           this.reanudate(item)
-          console.log("crash")
 
         }
       } catch (error) {
