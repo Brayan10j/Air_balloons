@@ -12,7 +12,7 @@
             <v-row>
               <v-col cols="2" v-for="(item, index) in airBallons" :key="index">
                 <v-card color="white">
-                  <v-img class="mx-auto" width="50" @click="chooseAirBallon(item.image)" :src="item.image"> </v-img>
+                  <v-img class="mx-auto" width="50" @click="showAirBallon(item)" :src="item.image"> </v-img>
                 </v-card>
               </v-col>
             </v-row>
@@ -72,7 +72,7 @@
           </thead>
           <tbody>
             <tr v-for="item in userAirBallons" :key="item.id">
-              <td><v-avatar :image="item.image"></v-avatar></td>
+              <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
               <td>{{ item.kilometers.toFixed(2) }}
               </td>
               <td>{{ item.state ? 'Live' : 'Crash' }}</td>
@@ -96,6 +96,20 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogAirballoon" max-width="500">
+      <v-card class="text-center">
+
+        <v-card-title> <v-img width="50" class="mx-auto" :src="imageAirBallon"></v-img> </v-card-title>
+
+        <v-card-text>
+
+        </v-card-text>
+
+        <v-card-actions class="justify-center">
+          <v-btn rounded variant="outlined" @click="chooseAirballoon()"> select </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -105,6 +119,7 @@ import { cellToLatLng } from "h3-js"
 
 export default {
   data: () => ({
+    dialogAirballoon: false,
     dialogReanudate: false,
     locationAirballon: [0, 0],
     hexStart: '',
@@ -117,27 +132,57 @@ export default {
     userAirBallons: [],
     routeBefore: {},
     point: {},
+    airballoon: {},
     imageAirBallon: '/Globos/1.png',
     kilometers: 0,
     airBallons: [
       {
         id: "1",
         image: '/Globos/1.png',
+        conditions: {
+          temp: [0, 50],
+          humidity: [0, 70],
+          windSpeed: [0, 35]
+        }
       },
       {
         id: "2", image: '/Globos/2.png',
+        conditions: {
+          temp: [-100, 0],
+          humidity: [50, 100],
+          windSpeed: [0, 50]
+        }
       },
       {
         id: "3", image: '/Globos/3.png',
+        conditions: {
+          temp: [0, 20],
+          humidity: [50, 100],
+          windSpeed: [0, 50]
+        }
       },
       {
         id: "4", image: '/Globos/4.png',
+        conditions: {
+          temp: [20, 50],
+          humidity: [0, 50]
+        }
       },
       {
         id: "5", image: '/Globos/5.png',
+        conditions: {
+          temp: [-100, 100],
+          humidity: [0, 100],
+          windSpeed: [0, 30]
+        }
       },
       {
         id: "6", image: '/Globos/6.png',
+        conditions: {
+          temp: [-100, 100],
+          humidity: [0, 100],
+          windSpeed: [40, 120]
+        }
       },
     ],
     showInfo: false,
@@ -221,7 +266,9 @@ export default {
         })
         this.map.setLayoutProperty('point', 'visibility', 'none')
         this.map.setLayoutProperty('allPoints', 'visibility', 'none')
-        this.map.loadImage(item.image, (error, image) => {
+
+
+        this.map.loadImage(`/Globos/${item.airballoonId}.png`, (error, image) => {
           if (error) throw error
 
           // Add the image to the map style.
@@ -246,24 +293,29 @@ export default {
     },
 
     setMarker() {
-
+      this.map.setLayoutProperty('point', 'visibility', 'none')
+      this.map.setLayoutProperty('route', 'visibility', 'none')
       const { lng, lat } = this.map.getCenter();
+      const el = document.createElement('div');
+      el.style.backgroundImage = `url(${this.imageAirBallon})`;
+      el.style.width = `50px`;
+      el.style.height = `50px`;
+      el.style.backgroundSize = '100%';
       this.markerInit = new mapboxgl.Marker({
-
+        element: el,
         draggable: true
       })
-        .setPopup(new mapboxgl.Popup().setHTML(`<img heigth="50" width="50" src=${this.imageAirBallon}><img>`))
         .setLngLat([lng, lat])
         .addTo(this.map)
-        .togglePopup();
-
       this.markerInit.on('dragend', this.onDragEnd);
 
     },
-    chooseAirBallon(imageIn) {
-      this.markerInit.remove()
-      this.imageAirBallon = imageIn
-      this.setMarker()
+    showAirBallon(item) {
+
+      this.dialogAirballoon = true
+      this.imageAirBallon = item.image
+      this.airballoon = item
+
 
       /* 
             this.map.setLayoutProperty('point', 'visibility', 'none')
@@ -275,6 +327,13 @@ export default {
             })
             this.map.setLayoutProperty('point', 'visibility', 'visible') */
     },
+
+    chooseAirballoon() {
+      this.dialogAirballoon = false
+      this.markerInit.remove()
+      this.setMarker()
+    },
+
     async reanudate(item) {
       try {
         const { data } = await useFetch('/airballoon', {
@@ -289,7 +348,7 @@ export default {
       const { data } = await useFetch('/airballoon', {
         method: "POST", body: {
           owner: "0x",
-          image: this.imageAirBallon,
+          airballoonId: this.airballoon.id,
           point: this.locationAirballon,
           kilometers: 0,
           state: true,
@@ -361,11 +420,6 @@ export default {
       this.map.addImage(`airBallon`, image)
     }
     )
-
-
-    this.setMarker()
-
-
 
     /*  const geolocate = new mapboxgl.GeolocateControl({
        positionOptions: {
@@ -484,6 +538,7 @@ export default {
         },
         maxzoom: 14,
       })
+      this.setMarker()
       this.map.on('idle', () => {
         this.map.resize()
       })
