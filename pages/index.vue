@@ -30,7 +30,7 @@
                   <v-col>
                     <v-icon>mdi-thermometer</v-icon>
                     {{ infoAirballon.temp }} &deg;C
-                    <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon>
+                    <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
                   </v-col>
                 </v-row>
               </v-card>
@@ -96,13 +96,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogAirballoon" max-width="500">
+    <v-dialog v-model="dialogAirballoon" max-width="300">
       <v-card class="text-center">
 
-        <v-card-title> <v-img width="50" class="mx-auto" :src="imageAirBallon"></v-img> </v-card-title>
+        <v-card-title> <v-img width="200" class="mx-auto" :src="airballoon.image"></v-img> </v-card-title>
+
+        <v-card-subtitle> Conditions </v-card-subtitle>
 
         <v-card-text>
-
+          <v-icon>mdi-thermometer</v-icon> : {{ airballoon.conditions.temp[0] }}&deg;C to {{
+            airballoon.conditions.temp[1] }}&deg;C
+        </v-card-text>
+        <v-card-text>
+          <v-icon>mdi-water</v-icon> : {{ airballoon.conditions.humidity[0] }}% to {{
+            airballoon.conditions.humidity[1] }}%
+        </v-card-text>
+        <v-card-text>
+          <v-icon>mdi-speedometer</v-icon> : {{ airballoon.conditions.windSpeed[0] }}km/h to {{
+            airballoon.conditions.windSpeed[1] }}km/h
         </v-card-text>
 
         <v-card-actions class="justify-center">
@@ -132,8 +143,15 @@ export default {
     userAirBallons: [],
     routeBefore: {},
     point: {},
-    airballoon: {},
-    imageAirBallon: '/Globos/1.png',
+    airballoon: {
+      id: "1",
+      image: '/Globos/1.png',
+      conditions: {
+        temp: [0, 50],
+        humidity: [0, 70],
+        windSpeed: [0, 35]
+      }
+    },
     kilometers: 0,
     airBallons: [
       {
@@ -165,7 +183,8 @@ export default {
         id: "4", image: '/Globos/4.png',
         conditions: {
           temp: [20, 50],
-          humidity: [0, 50]
+          humidity: [0, 50],
+          windSpeed: [0, 100]
         }
       },
       {
@@ -281,7 +300,7 @@ export default {
         ])
         this.map.getSource('point').setData(this.point)
         this.map.getSource('routeBefore').setData(this.routeBefore)
-        //this.map.setLayoutProperty('routeBefore', 'visibility', 'visible')
+        this.map.setLayoutProperty('route', 'visibility', 'visible')
         let x = this.genesisArray.find((a) => a.id == item.id)
         if (x.kilometers == item.kilometers) {
           this.reanudate(item)
@@ -297,7 +316,7 @@ export default {
       this.map.setLayoutProperty('route', 'visibility', 'none')
       const { lng, lat } = this.map.getCenter();
       const el = document.createElement('div');
-      el.style.backgroundImage = `url(${this.imageAirBallon})`;
+      el.style.backgroundImage = `url(${this.airballoon.image})`;
       el.style.width = `50px`;
       el.style.height = `50px`;
       el.style.backgroundSize = '100%';
@@ -313,7 +332,6 @@ export default {
     showAirBallon(item) {
 
       this.dialogAirballoon = true
-      this.imageAirBallon = item.image
       this.airballoon = item
 
 
