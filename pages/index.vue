@@ -352,6 +352,10 @@ export default {
       this.setMarker()
     },
 
+    changeCapa() {
+
+    },
+
     async reanudate(item) {
       try {
         const { data } = await useFetch('/airballoon', {
@@ -420,6 +424,7 @@ export default {
       zoom: 1,
       projection: 'globe',
       attributionControl: false,
+      renderWorldCopies: false
     })
 
     this.airBallons.map((a, i) => {
@@ -438,6 +443,31 @@ export default {
       this.map.addImage(`airBallon`, image)
     }
     )
+
+    class CustomControl {
+      constructor(idLayer, icon) {
+        this.idLayer = idLayer;
+        this.icon = icon;
+      }
+      onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group text-black ";
+        this._container.innerHTML = `<button class="mapboxgl-ctrl-icon mdi mdi-${this.icon}" ></button>`;
+        this._container.addEventListener("contextmenu", (e) => e.preventDefault());
+        this._container.addEventListener("click", () => { map.setLayoutProperty(this.idLayer, 'visibility', map.getLayoutProperty(this.idLayer, 'visibility') == "none" ? "visible" : "none") });
+        return this._container;
+      }
+
+      onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+      }
+    }
+
+    this.map.addControl(new CustomControl('temperature-layer', "thermometer"), "top-right");
+    this.map.addControl(new CustomControl('humidity-layer', "water"), "top-right");
+    this.map.addControl(new CustomControl('wind-layer', "wind-power"), "top-right");
 
     /*  const geolocate = new mapboxgl.GeolocateControl({
        positionOptions: {
@@ -502,6 +532,69 @@ export default {
 
 
     this.map.on('load', async () => {
+
+      this.map.addLayer({
+        id: 'temperature-layer',
+        type: 'raster',
+        source: {
+          type: 'raster',
+          tiles: [
+            "https://tile.openweathermap.org/map/temp_new/0/0/0.png?appid=704e6c6ad29a17b1a787bd035c725346"
+          ],
+          tileSize: 1024,
+          maxzoom: 0,
+          minzoom: 0,
+        },
+        layout: {
+          "visibility": "none"
+        },
+        paint: {
+          "raster-saturation": 0.5,
+          //"visibility": "none"
+        }
+      });
+
+      this.map.addLayer({
+        id: 'humidity-layer',
+        type: 'raster',
+        source: {
+          type: 'raster',
+          tiles: [
+            "https://api.tomorrow.io/v4/map/tile/0/0/0/humidity/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
+          ],
+          tileSize: 1024,
+          maxzoom: 0,
+          minzoom: 0,
+        },
+        layout: {
+          "visibility": "none"
+        },
+        paint: {
+          //"raster-saturation": 0.5,
+          //"visibility": "none"
+        }
+      });
+
+      this.map.addLayer({
+        id: 'wind-layer',
+        type: 'raster',
+        source: {
+          type: 'raster',
+          tiles: [
+            "https://tile.openweathermap.org/map/wind_new/0/0/0.png?appid=704e6c6ad29a17b1a787bd035c725346"
+          ],
+          tileSize: 1024,
+          maxzoom: 0,
+          minzoom: 0,
+        },
+        layout: {
+          "visibility": "none"
+        },
+        paint: {
+          "raster-saturation": 0.6,
+          //"visibility": "none"
+        }
+      });
 
       this.map.addSource('routeBefore', {
         type: 'geojson',
