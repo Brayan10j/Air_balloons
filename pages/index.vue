@@ -1,18 +1,19 @@
 <template>
   <v-container>
     <v-row justify="center" align="center">
-
       <v-col> <v-btn block class="mx-auto" @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn> </v-col>
     </v-row>
     <v-row>
-
       <v-col cols="12">
         <v-card>
           <v-card-text>
             <v-row>
               <v-col cols="2" v-for="(item, index) in airBallons" :key="index">
                 <v-card color="white">
-                  <v-img class="mx-auto" width="50" @click="showAirBallon(item)" :src="item.image"> </v-img>
+                  <v-img class="mx-auto" width="50" @click="() => {
+                    dialogAirballoon = true
+                    airballoon = item
+                  }" :src="item.image"> </v-img>
                 </v-card>
               </v-col>
             </v-row>
@@ -212,102 +213,95 @@ export default {
       speed: 0,
     },
   }),
-  computed: {
-    /* filterLands: function () {
-      return (
-        this.lands
-          //.filter((l) => h3.h3GetResolution(l.hexID) == 9)
-          .filter((l) => this.$store.state.userInfo.address === l.owner)
-          .map((l) => l.hexID)
-      )
-    }, */
-    pointUserAirballoons: function () {
-      return this.userAirBallons.map((a) => a.point)
-    },
-  },
   methods: {
-    onDragEnd() {
-      const lngLat = this.markerInit.getLngLat();
-
-      //this.map.setLayoutProperty('point', 'visibility', 'none')
-      this.locationAirballon = [lngLat.lng, lngLat.lat]
-      /* this.popup = new mapboxgl.Popup()
-        .setLngLat({ lon: lngLat.lng, lat: lngLat.lat })
-        .setHTML(`<img heigth="50" width="50" src=${this.imageAirBallon}><img>`)
-        .addTo(this.map); */
-      //this.point.features[0].geometry.coordinates = [lngLat.lng, lngLat.lat]
-      //this.map.getSource('point').setData(this.point)
-      //this.map.setLayoutProperty('point', 'visibility', 'visible')
-    },
     seeAll() {
+      // Remove the markerInit layer
       this.markerInit.remove();
-      const arrayFeatures = this.userAirBallons.map((a) => {
-        return {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': a.point
-          },
-          'properties': {
-            'image-name': a.image,
-          }
+
+      // Create an array of features
+      const arrayFeatures = this.userAirBallons.map(a => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: a.point
+        },
+        properties: {
+          'image-name': `/Globos/${a.airballoonId}.png`,
         }
-      })
-      let points = {
+      }));
+
+      // Create a FeatureCollection from the array of features
+      const points = {
         type: 'FeatureCollection',
         features: arrayFeatures,
-      }
-      this.map.setLayoutProperty('point', 'visibility', 'none')
-      this.map.setLayoutProperty('allPoints', 'visibility', 'none')
-      this.map.getSource('allPoints').setData(points)
-      this.map.setLayoutProperty('allPoints', 'visibility', 'visible')
+      };
+
+      // Hide 'point' and 'allPoints' layers
+      this.map.setLayoutProperty('point', 'visibility', 'none');
+      this.map.setLayoutProperty('allPoints', 'visibility', 'none');
+
+      // Set the data for 'allPoints' source and make it visible
+      this.map.getSource('allPoints').setData(points);
+      this.map.setLayoutProperty('allPoints', 'visibility', 'visible');
     },
     wintdeg(deg) {
       let arr = [0, 45, 90, 135, 180, 225, 270, 315]
       return arr[Math.round(((deg + 180) % 360) / 45)]
     },
     async seeAirballon(item) {
-
+      // Remove the markerInit layer and show the info panel
       this.markerInit.remove();
-      this.showInfo = true
+      this.showInfo = true;
+      this.routeBefore.geometry.coordinates = item.route
+      this.map.getSource('routeBefore').setData(this.routeBefore);
+      
+
       try {
         const { data } = await useFetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${item.point[1]}&lon=${item.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
-        )
-        this.infoAirballon.temp = data.value.main.temp
-        this.infoAirballon.humidity = data.value.main.humidity
-        this.infoAirballon.speed = data.value.wind.speed * 3.6
-        this.infoAirballon.wind = this.wintdeg(data.value.wind.deg)
-        this.infoAirballon.rain = data.value.rain
+        );
+
+        // Update the infoAirballon object properties
+        this.infoAirballon.temp = data.value.main.temp;
+        this.infoAirballon.humidity = data.value.main.humidity;
+        this.infoAirballon.speed = data.value.wind.speed * 3.6;
+        this.infoAirballon.wind = this.wintdeg(data.value.wind.deg);
+        this.infoAirballon.rain = data.value.rain;
+
+        // Center the map on the selected airballon
+       
+        // Hide 'point' and 'allPoints' layers
+        this.map.setLayoutProperty('point', 'visibility', 'none');
+        this.map.setLayoutProperty('allPoints', 'visibility', 'none');
+
+        // Load and update the 'airBallon' image
+        this.map.loadImage(`/Globos/${item.airballoonId}.png`, (error, image) => {
+          if (error) throw error;
+          this.map.updateImage('airBallon', image);
+        });
+
+        // Update point and route data sources
+        this.point.features[0].geometry.coordinates = item.point;
+        
+        
+        this.map.getSource('point').setData(this.point);
+
+        // Show the 'route' layer
+        this.map.setLayoutProperty('point', 'visibility', 'visible');
+        this.map.setLayoutProperty('route', 'visibility', 'visible');
+
+        // Check if it needs to be resumed
+        const x = this.genesisArray.find((a) => a.id === item.id);
+        if (x.kilometers === item.kilometers) {
+          this.reanudate(item);
+        }
         this.map.jumpTo({
           center: item.point,
           zoom: 1,
-        })
-        this.map.setLayoutProperty('point', 'visibility', 'none')
-        this.map.setLayoutProperty('allPoints', 'visibility', 'none')
+        });
 
-
-        this.map.loadImage(`/Globos/${item.airballoonId}.png`, (error, image) => {
-          if (error) throw error
-
-          // Add the image to the map style.
-          this.map.updateImage('airBallon', image)
-        })
-        this.map.setLayoutProperty('point', 'visibility', 'visible')
-        this.point.features[0].geometry.coordinates = item.point
-        this.routeBefore.features[0].geometry.coordinates = JSON.parse(JSON.stringify(item.route)).concat([
-          item.point,
-        ])
-        this.map.getSource('point').setData(this.point)
-        this.map.getSource('routeBefore').setData(this.routeBefore)
-        this.map.setLayoutProperty('route', 'visibility', 'visible')
-        let x = this.genesisArray.find((a) => a.id == item.id)
-        if (x.kilometers == item.kilometers) {
-          this.reanudate(item)
-
-        }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     },
 
@@ -326,24 +320,11 @@ export default {
       })
         .setLngLat([lng, lat])
         .addTo(this.map)
-      this.markerInit.on('dragend', this.onDragEnd);
+      this.markerInit.on('dragend', () => {
+        const lngLat = this.markerInit.getLngLat();
+        this.locationAirballon = [lngLat.lng, lngLat.lat]
+      });
 
-    },
-    showAirBallon(item) {
-
-      this.dialogAirballoon = true
-      this.airballoon = item
-
-
-      /* 
-            this.map.setLayoutProperty('point', 'visibility', 'none')
-            this.map.loadImage(imageIn, (error, image) => {
-              if (error) throw error
-      
-              // Add the image to the map style.
-              this.map.updateImage('airBallon', image)
-            })
-            this.map.setLayoutProperty('point', 'visibility', 'visible') */
     },
 
     chooseAirballoon() {
@@ -352,13 +333,9 @@ export default {
       this.setMarker()
     },
 
-    changeCapa() {
-
-    },
-
     async reanudate(item) {
       try {
-        const { data } = await useFetch('/airballoon', {
+        await useFetch('/airballoon', {
           method: "POST", body: item
         })
       } catch (error) {
@@ -366,18 +343,23 @@ export default {
       }
     },
     async flyAirballon() {
+      try {
+        await useFetch('/airballoon', {
+          method: "POST", body: {
+            owner: "0x",
+            airballoonId: this.airballoon.id,
+            point: this.locationAirballon,
+            kilometers: 0,
+            state: true,
+            route: [[this.locationAirballon, this.locationAirballon]],
+          }
+        })
+        this.markerInit.remove()
+      } catch (error) {
+        alert(error.message)
+      }
 
-      const { data } = await useFetch('/airballoon', {
-        method: "POST", body: {
-          owner: "0x",
-          airballoonId: this.airballoon.id,
-          point: this.locationAirballon,
-          kilometers: 0,
-          state: true,
-          route: [this.locationAirballon],
-        }
-      })
-      this.markerInit.remove()
+
     },
   },
   async mounted() {
@@ -393,26 +375,7 @@ export default {
         .from('airballoons')
         .select('*')
       this.userAirBallons = data
-    }, 3000);
-
-
-
-    //update poll
-
-    /*  const airballoons = supabase.channel('custom-all-channel')
-       .on(
-         'postgres_changes',
-         { event: '*', schema: 'public', table: 'airballoons' },
-         async (payload) => {
-           /* let { data, error } = await supabase
-             .from('airballoons')
-             .select('*')
-           this.userAirBallons = data 
-           //console.log('Change received!', payload)
-         }
-       )
-       .subscribe()
-  */
+    }, 5000);
 
     mapboxgl.accessToken =
       'pk.eyJ1Ijoic3Rvcm1ibGF4IiwiYSI6ImNrb2Z6a2F3bzBib3gyb3BucDV5eG1maXoifQ.BgKgtZQJa5m1xOXGNuJfjw'
@@ -436,10 +399,14 @@ export default {
       })
     })
 
+
+
+
+
+
+
     await this.map.loadImage(`/Globos/1.png`, (error, image) => {
       if (error) throw error
-
-      // Add the image to the map style.
       this.map.addImage(`airBallon`, image)
     }
     )
@@ -469,21 +436,6 @@ export default {
     this.map.addControl(new CustomControl('humidity-layer', "water"), "top-right");
     this.map.addControl(new CustomControl('wind-layer', "wind-power"), "top-right");
 
-    /*  const geolocate = new mapboxgl.GeolocateControl({
-       positionOptions: {
-         enableHighAccuracy: true
-       },
-       trackUserLocation: true
-     });
-     // Add the control to the map.
-     this.map.addControl(geolocate);
-     // Set an event listener that fires
-     // when a geolocate event occurs.
-     geolocate.on('geolocate', () => {
-       console.log('A geolocate event has occurred.');
-     }); */
-
-    // A simple line from origin to current destination.
     this.point = {
       type: 'FeatureCollection',
       features: [
@@ -511,16 +463,11 @@ export default {
       ],
     }
     this.routeBefore = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [],
-          },
-        },
-      ],
+      type: 'Feature',
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: [],
+      },
     }
 
     // A single point that animates along the route.
@@ -533,13 +480,28 @@ export default {
 
     this.map.on('load', async () => {
 
+      this.map.addSource('routeBefore', {
+        type: 'geojson',
+        data: this.routeBefore,
+      })
+
+      this.map.addLayer({
+        id: 'route',
+        source: 'routeBefore',
+        type: 'line',
+        paint: {
+          'line-width': 2,
+          'line-color': '#007cbf',
+        },
+      })
+
       this.map.addLayer({
         id: 'temperature-layer',
         type: 'raster',
         source: {
           type: 'raster',
           tiles: [
-            "https://tile.openweathermap.org/map/temp_new/0/0/0.png?appid=704e6c6ad29a17b1a787bd035c725346"
+            "https://api.tomorrow.io/v4/map/tile/0/0/0/temperature/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
           ],
           tileSize: 1024,
           maxzoom: 0,
@@ -549,7 +511,8 @@ export default {
           "visibility": "none"
         },
         paint: {
-          "raster-saturation": 0.5,
+          //"raster-saturation": 0.2,
+          "raster-opacity": 0.8
           //"visibility": "none"
         }
       });
@@ -570,7 +533,7 @@ export default {
           "visibility": "none"
         },
         paint: {
-          //"raster-saturation": 0.5,
+          "raster-opacity": 0.7,
           //"visibility": "none"
         }
       });
@@ -581,7 +544,7 @@ export default {
         source: {
           type: 'raster',
           tiles: [
-            "https://tile.openweathermap.org/map/wind_new/0/0/0.png?appid=704e6c6ad29a17b1a787bd035c725346"
+            "https://api.tomorrow.io/v4/map/tile/0/0/0/windSpeed/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
           ],
           tileSize: 1024,
           maxzoom: 0,
@@ -591,15 +554,13 @@ export default {
           "visibility": "none"
         },
         paint: {
-          "raster-saturation": 0.6,
+          "raster-opacity": 0.8
+          //"raster-saturation": 0.6,
           //"visibility": "none"
         }
       });
 
-      this.map.addSource('routeBefore', {
-        type: 'geojson',
-        data: this.routeBefore,
-      })
+
 
       this.map.addSource('point', {
         type: 'geojson',
@@ -622,19 +583,9 @@ export default {
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
         },
-        maxzoom: 14,
       })
 
-      this.map.addLayer({
-        id: 'route',
-        source: 'routeBefore',
-        type: 'line',
-        paint: {
-          'line-width': 2,
-          'line-color': '#007cbf',
-        },
-        maxzoom: 14,
-      })
+
 
       this.map.addLayer({
         id: 'point',
@@ -647,7 +598,6 @@ export default {
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
         },
-        maxzoom: 14,
       })
       this.setMarker()
       this.map.on('idle', () => {

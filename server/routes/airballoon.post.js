@@ -31,8 +31,43 @@ export default defineEventHandler(async (event) => {
       1,
       infoWeather.data.wind.deg - 180
     );
-    let speed = infoWeather.data.wind.speed * 3.6;
     let newDestination = destination.geometry.coordinates;
+    //revisar el antimeridiano
+
+    /* if (destination.geometry.coordinates[0] > 180) {
+      destination.geometry.coordinates[0] =
+        (destination.geometry.coordinates[0] % 180) - 180;
+      newDestination = [
+        [airBallon.point, [180.0, destination.geometry.coordinates[1]]],
+        [
+          [-180.0, destination.geometry.coordinates[1]],
+          [
+            destination.geometry.coordinates[0],
+            destination.geometry.coordinates[1],
+          ],
+        ],
+      ];
+    } else {
+      if (destination.geometry.coordinates[0] < -180) {
+        destination.geometry.coordinates[0] =
+          (destination.geometry.coordinates[0] % 180) + 180;
+
+        newDestination = [
+          [airBallon.point, [180.0, destination.geometry.coordinates[1]]],
+          [
+            [-180.0, destination.geometry.coordinates[1]],
+            [
+              destination.geometry.coordinates[0],
+              destination.geometry.coordinates[1],
+            ],
+          ],
+        ];
+      } else {
+        newDestination = destination.geometry.coordinates; // [ 0,0]  [ [0,0], [0.0]]
+      } 
+    }*/
+    let speed = infoWeather.data.wind.speed * 3.6;
+
     let counter = 0;
     routeTemp.features[0].geometry.coordinates = [
       airBallon.point,
@@ -56,17 +91,17 @@ export default defineEventHandler(async (event) => {
     async function animate() {
       try {
         if (counter >= steps) {
-          airBallon.route.push(airBallon.point);
+          airBallon.route.push([airBallon.point, airBallon.point]);
           loadRoute(airBallon);
           // Realizar la inserción en la base de datos después de cada iteración
         } else {
+          airBallon.route.push([airBallon.point, routeTemp.features[0].geometry.coordinates[counter]]); 
           airBallon.point = routeTemp.features[0].geometry.coordinates[counter];
-          let routeTemp2 = airBallon.route.concat([airBallon.point]);
-          let line = turf.lineString(routeTemp2);
+          let line = turf.multiLineString(airBallon.route);
           airBallon.kilometers = turf.length(line);
-          counter +=3;
+          counter += 5;
 
-          setTimeout(animate, 3000);
+          setTimeout(animate, 5000);
         }
         const { data, error } = await supabase
           .from("airballoons")
