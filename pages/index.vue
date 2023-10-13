@@ -2,6 +2,7 @@
   <v-container>
     <v-row justify="center" align="center">
       <v-col> <v-btn block class="mx-auto" @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn> </v-col>
+      {{ locationAirballon }}
     </v-row>
     <v-row>
       <v-col cols="12">
@@ -239,6 +240,7 @@ export default {
       // Hide 'point' and 'allPoints' layers
       this.map.setLayoutProperty('point', 'visibility', 'none');
       this.map.setLayoutProperty('allPoints', 'visibility', 'none');
+      this.map.setLayoutProperty('route', 'visibility', 'none');
 
       // Set the data for 'allPoints' source and make it visible
       this.map.getSource('allPoints').setData(points);
@@ -251,10 +253,12 @@ export default {
     async seeAirballon(item) {
       // Remove the markerInit layer and show the info panel
       this.markerInit.remove();
+
       this.showInfo = true;
-      this.routeBefore.geometry.coordinates = item.route
-      this.map.getSource('routeBefore').setData(this.routeBefore);
-      
+      this.map.jumpTo({
+        center: item.point,
+        zoom: 1,
+      });
 
       try {
         const { data } = await useFetch(
@@ -269,7 +273,7 @@ export default {
         this.infoAirballon.rain = data.value.rain;
 
         // Center the map on the selected airballon
-       
+
         // Hide 'point' and 'allPoints' layers
         this.map.setLayoutProperty('point', 'visibility', 'none');
         this.map.setLayoutProperty('allPoints', 'visibility', 'none');
@@ -282,23 +286,23 @@ export default {
 
         // Update point and route data sources
         this.point.features[0].geometry.coordinates = item.point;
-        
-        
+
         this.map.getSource('point').setData(this.point);
+        this.routeBefore.geometry.coordinates = item.route
+        this.map.getSource('routeBefore').setData(this.routeBefore);
 
         // Show the 'route' layer
         this.map.setLayoutProperty('point', 'visibility', 'visible');
         this.map.setLayoutProperty('route', 'visibility', 'visible');
+        
 
         // Check if it needs to be resumed
-        const x = this.genesisArray.find((a) => a.id === item.id);
+        /* const x = this.genesisArray.find((a) => a.id === item.id);
         if (x.kilometers === item.kilometers) {
           this.reanudate(item);
-        }
-        this.map.jumpTo({
-          center: item.point,
-          zoom: 1,
-        });
+          console.log("reanude airballon")
+        } */
+
 
       } catch (error) {
         console.log(error);
@@ -368,14 +372,33 @@ export default {
     let { data, error } = await supabase
       .from('airballoons')
       .select('*')
-    this.genesisArray = data
+    this.userAirBallons = data
 
-    setInterval(async () => {
+    const airballoons = supabase.channel('custom-all-channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'airballoons' },
+        async (payload) => {
+          if (payload.eventType == "UPDATE") {
+            this.userAirBallons = this.userAirBallons.map(objeto =>
+              objeto.id === payload.new.id ? payload.new : objeto
+            );
+          } else {
+            let { data, error } = await supabase
+              .from('airballoons')
+              .select('*')
+            this.userAirBallons = data
+          }
+
+        }
+      )
+      .subscribe()
+    /* setInterval(async () => {
       let { data, error } = await supabase
         .from('airballoons')
         .select('*')
       this.userAirBallons = data
-    }, 5000);
+    }, 5000); */
 
     mapboxgl.accessToken =
       'pk.eyJ1Ijoic3Rvcm1ibGF4IiwiYSI6ImNrb2Z6a2F3bzBib3gyb3BucDV5eG1maXoifQ.BgKgtZQJa5m1xOXGNuJfjw'
@@ -600,9 +623,9 @@ export default {
         },
       })
       this.setMarker()
-      this.map.on('idle', () => {
+      /* this.map.on('idle', () => {
         this.map.resize()
-      })
+      }) */
     })
 
 
