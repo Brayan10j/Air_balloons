@@ -43,6 +43,7 @@
 
         </v-card>
       </v-menu>
+      <v-spacer />
     </v-app-bar>
     <v-main>
       <slot />

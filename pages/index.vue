@@ -2,7 +2,9 @@
   <v-container>
     <v-row justify="center" align="center">
       <v-col> <v-btn block class="mx-auto" @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn> </v-col>
-      {{ locationAirballon }}
+      <v-col> <v-btn block class="mx-auto" @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
+      </v-col>
+
     </v-row>
     <v-row>
       <v-col cols="12">
@@ -17,6 +19,12 @@
                   }" :src="item.image"> </v-img>
                 </v-card>
               </v-col>
+            </v-row>
+            <v-row>
+              <v-col class="text-center">
+                {{ locationAirballon }}
+              </v-col>
+
             </v-row>
             <v-row>
               <v-card width="500" v-show="showInfo" class="mx-auto">
@@ -55,49 +63,9 @@
         <v-btn color="blue" @click="seeAll()"> See all</v-btn>
       </v-col> -->
       <v-col>
-        <v-table height="320px" fixed-header>
-          <thead>
-            <tr>
-              <th class="text-left">
-                Air-balloon
-              </th>
-              <th class="text-left">
-                Kilometers
-              </th>
-              <th class="text-left">
-                State
-              </th>
-              <th class="text-left">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in userAirBallons" :key="item.id">
-              <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
-              <td>{{ item.kilometers.toFixed(2) }}
-              </td>
-              <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-              <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
-            </tr>
-          </tbody>
-        </v-table>
+
       </v-col>
     </v-row>
-    <v-dialog v-model="dialogReanudate" persistent max-width="500">
-      <v-card>
-        <v-card-title> Your airballon was disrupted , reanudate? </v-card-title>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="green darken-1" text @click="dialogReanudate = false">
-            Disagree
-          </v-btn>
-          <v-btn color="green darken-1" text @click="reanudate()">
-            Agree
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="dialogAirballoon" max-width="300">
       <v-card class="text-center">
 
@@ -123,25 +91,48 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogTable" min-width="300">
+      <v-table height="320px" fixed-header>
+        <thead>
+          <tr>
+            <th class="text-left">
+              Air-balloon
+            </th>
+            <th class="text-left">
+              Kilometers
+            </th>
+            <th class="text-left">
+              State
+            </th>
+            <th class="text-left">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in userAirBallons" :key="item.id">
+            <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
+            <td>{{ item.kilometers.toFixed(2) }}
+            </td>
+            <td>{{ item.state ? 'Live' : 'Crash' }}</td>
+            <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-dialog>
+
   </v-container>
 </template>
 
 <script>
-import { cellToLatLng } from "h3-js"
-
 
 export default {
   data: () => ({
     dialogAirballoon: false,
-    dialogReanudate: false,
+    dialogTable: false,
     locationAirballon: [0, 0],
-    hexStart: '',
     markerInit: {},
-    genesisArray: [],
-    popup: {},
     map: {},
-    coordinates: [],
-    lands: [],
     userAirBallons: [],
     routeBefore: {},
     point: {},
@@ -272,6 +263,9 @@ export default {
         this.infoAirballon.wind = this.wintdeg(data.value.wind.deg);
         this.infoAirballon.rain = data.value.rain;
 
+
+        this.locationAirballon = item.point
+
         // Center the map on the selected airballon
 
         // Hide 'point' and 'allPoints' layers
@@ -294,15 +288,15 @@ export default {
         // Show the 'route' layer
         this.map.setLayoutProperty('point', 'visibility', 'visible');
         this.map.setLayoutProperty('route', 'visibility', 'visible');
-        
+
 
         // Check if it needs to be resumed
-        /* const x = this.genesisArray.find((a) => a.id === item.id);
-        if (x.kilometers === item.kilometers) {
+        const fechaMenosUnaHora = new Date();
+        fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
+        if (new Date(item.updated_at) < fechaMenosUnaHora) {
           this.reanudate(item);
-          console.log("reanude airballon")
-        } */
-
+        }
+        this.dialogTable = false
 
       } catch (error) {
         console.log(error);
@@ -393,6 +387,7 @@ export default {
         }
       )
       .subscribe()
+
     /* setInterval(async () => {
       let { data, error } = await supabase
         .from('airballoons')
