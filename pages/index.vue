@@ -27,7 +27,7 @@
 
             </v-row>
             <v-row>
-              <v-card width="500" v-show="showInfo" class="mx-auto">
+              <v-card width="500" class="mx-auto">
                 <v-row>
                   <v-col>
                     <v-icon>mdi-water</v-icon>
@@ -197,7 +197,6 @@ export default {
         }
       },
     ],
-    showInfo: false,
     infoAirballon: {
       temp: 0,
       wind: 0,
@@ -241,19 +240,10 @@ export default {
       let arr = [0, 45, 90, 135, 180, 225, 270, 315]
       return arr[Math.round(((deg + 180) % 360) / 45)]
     },
-    async seeAirballon(item) {
-      // Remove the markerInit layer and show the info panel
-      this.markerInit.remove();
-
-      this.showInfo = true;
-      this.map.jumpTo({
-        center: item.point,
-        zoom: 1,
-      });
-
+    async getWeather(location) {
       try {
         const { data } = await useFetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${item.point[1]}&lon=${item.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${location[1]}&lon=${location[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
         );
 
         // Update the infoAirballon object properties
@@ -262,8 +252,24 @@ export default {
         this.infoAirballon.speed = data.value.wind.speed * 3.6;
         this.infoAirballon.wind = this.wintdeg(data.value.wind.deg);
         this.infoAirballon.rain = data.value.rain;
+      } catch (error) {
 
+      }
+    },
+    async seeAirballon(item) {
+      // Remove the markerInit layer and show the info panel
+      this.markerInit.remove();
+      this.map.jumpTo({
+        center: item.point,
+        zoom: 1,
+      });
 
+      
+
+      this.getWeather(item.point)
+
+      try {
+        
         this.locationAirballon = item.point
 
         // Center the map on the selected airballon
@@ -321,8 +327,8 @@ export default {
       this.markerInit.on('dragend', () => {
         const lngLat = this.markerInit.getLngLat();
         this.locationAirballon = [lngLat.lng, lngLat.lat]
+        this.getWeather(this.locationAirballon)
       });
-
     },
 
     chooseAirballoon() {

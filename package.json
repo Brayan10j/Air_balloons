@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
-    "nuxt": "^3.7.4"
+    "nuxt": "^3.7.4",
+    "nuxt3-leaflet": "^1.0.12"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.1.2",
