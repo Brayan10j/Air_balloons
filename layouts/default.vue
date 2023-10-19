@@ -61,10 +61,6 @@
         <span>Nearby</span>
       </v-btn>
     </v-bottom-navigation> -->
-
-    <v-footer>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
   </v-app>
 </template>
 

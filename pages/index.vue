@@ -1,11 +1,5 @@
 <template>
   <v-container>
-    <v-row justify="center" align="center">
-      <v-col> <v-btn block class="mx-auto" @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn> </v-col>
-      <v-col> <v-btn block class="mx-auto" @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
-      </v-col>
-
-    </v-row>
     <v-row>
       <v-col cols="12">
         <v-card>
@@ -20,15 +14,12 @@
                 </v-card>
               </v-col>
             </v-row>
-            <v-row>
-              <v-col class="text-center">
-                {{ locationAirballon }}
-              </v-col>
-
+            <v-row justify="center">
+              {{ locationAirballon }}
             </v-row>
-            <v-row>
-              <v-card width="500" class="mx-auto">
-                <v-row>
+            <v-row justify="center">
+              <v-card width="500">
+                <v-row class="text-center">
                   <v-col>
                     <v-icon>mdi-water</v-icon>
                     {{ infoAirballon.humidity }} %
@@ -58,14 +49,14 @@
           </v-card-actions>
         </v-card>
       </v-col>
-      <!--  <v-col>
-       
-        <v-btn color="blue" @click="seeAll()"> See all</v-btn>
-      </v-col> -->
-      <v-col>
-
-      </v-col>
     </v-row>
+    <v-bottom-navigation grow>
+      <v-btn @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn>
+      <v-btn @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
+      <!--  <v-btn @click="dialogTable = true"> <v-icon>mdi-plus</v-icon> </v-btn> -->
+
+
+    </v-bottom-navigation>
     <v-dialog v-model="dialogAirballoon" max-width="300">
       <v-card class="text-center">
 
@@ -264,12 +255,12 @@ export default {
         zoom: 1,
       });
 
-      
+
 
       this.getWeather(item.point)
 
       try {
-        
+
         this.locationAirballon = item.point
 
         // Center the map on the selected airballon
