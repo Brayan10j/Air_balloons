@@ -129,6 +129,7 @@ export default defineEventHandler(async (event) => {
 
         let line = turf.multiLineString(airBallon.route);
         airBallon.kilometers = turf.length(line);
+        airBallon.step = windSpeed / 3600;
 
         //let steps = (lineDistance / speed) * 3600;
         setTimeout(() => {

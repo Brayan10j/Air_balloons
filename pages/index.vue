@@ -87,6 +87,9 @@
         <thead>
           <tr>
             <th class="text-left">
+              Id
+            </th>
+            <th class="text-left">
               Air-balloon
             </th>
             <th class="text-left">
@@ -102,8 +105,9 @@
         </thead>
         <tbody>
           <tr v-for="item in userAirBallons" :key="item.id">
+            <td>{{ item.id }} </td>
             <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
-            <td>{{ item.kilometers.toFixed(2) }}
+            <td>{{ item.kilometers.toFixed(4) }}
             </td>
             <td>{{ item.state ? 'Live' : 'Crash' }}</td>
             <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
@@ -121,6 +125,7 @@ export default {
   data: () => ({
     dialogAirballoon: false,
     dialogTable: false,
+    intervals: [],
     locationAirballon: [0, 0],
     markerInit: {},
     map: {},
@@ -285,8 +290,6 @@ export default {
         // Show the 'route' layer
         this.map.setLayoutProperty('point', 'visibility', 'visible');
         this.map.setLayoutProperty('route', 'visibility', 'visible');
-
-
         // Check if it needs to be resumed
         const fechaMenosUnaHora = new Date();
         fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
@@ -337,6 +340,13 @@ export default {
         alert(error.message)
       }
     },
+    setIntervals() {
+      this.intervals.forEach(interval => clearInterval(interval));
+      this.intervals = this.userAirBallons
+        .filter(a => a.state).map(a => setInterval(() => {
+          a.kilometers += a.step
+        }, 1000))
+    },
     async flyAirballon() {
       try {
         await useFetch('/airballoon', {
@@ -345,11 +355,14 @@ export default {
             airballoonId: this.airballoon.id,
             point: this.locationAirballon,
             kilometers: 0,
+            step: this.infoAirballon.speed / 3600,
             state: true,
             route: [[this.locationAirballon, this.locationAirballon]],
           }
         })
         this.markerInit.remove()
+        this.dialogTable = true
+        alert("Airballoon put to flight successfully")
       } catch (error) {
         alert(error.message)
       }
@@ -365,6 +378,9 @@ export default {
       .select('*')
     this.userAirBallons = data
 
+    this.setIntervals()
+
+
     const airballoons = supabase.channel('custom-all-channel')
       .on(
         'postgres_changes',
@@ -374,11 +390,14 @@ export default {
             this.userAirBallons = this.userAirBallons.map(objeto =>
               objeto.id === payload.new.id ? payload.new : objeto
             );
+            this.setIntervals()
+
           } else {
             let { data, error } = await supabase
               .from('airballoons')
               .select('*')
             this.userAirBallons = data
+            this.setIntervals()
           }
 
         }
@@ -505,7 +524,7 @@ export default {
         source: 'routeBefore',
         type: 'line',
         paint: {
-          'line-width': 2,
+          'line-width': 4,
           'line-color': '#007cbf',
         },
       })
