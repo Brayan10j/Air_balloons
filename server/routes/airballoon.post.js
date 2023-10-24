@@ -69,13 +69,11 @@ export default defineEventHandler(async (event) => {
   if (error) console.log(error);
   async function loadRoute(airBallon) {
     try {
-      await supabase.from("airballoons").upsert(airBallon).select();
       let infoWeather = await axios.get(
         `https://api.openweathermap.org/data/2.5/weather?lat=${airBallon.point[1]}&lon=${airBallon.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
       );
       let windSpeed = infoWeather.data.wind.speed * 3.6;
-      const test = airBallons[parseInt(airBallon.airballoonId)-1];
-
+      const test = airBallons[parseInt(airBallon.airballoonId) - 1];
 
       if (
         infoWeather.data.main.temp < test.conditions.temp[0] ||
@@ -86,7 +84,7 @@ export default defineEventHandler(async (event) => {
         windSpeed > test.conditions.windSpeed[1]
       ) {
         airBallon.state = false;
-        await supabase.from("airballoons").upsert(airBallon).select();
+        await supabase.from("airballoons").upsert(airBallon);
       } else {
         let destination = turf.destination(
           airBallon.point,
@@ -121,28 +119,22 @@ export default defineEventHandler(async (event) => {
           ]);
         }
 
-        const steps =
-          (turf.distance(airBallon.point, destination.geometry.coordinates) /
-            windSpeed) *
-          3600;
+        const steps = 3600 / windSpeed;
         airBallon.point = destination.geometry.coordinates;
 
         let line = turf.multiLineString(airBallon.route);
         airBallon.kilometers = turf.length(line);
         airBallon.step = windSpeed / 3600;
 
-        //let steps = (lineDistance / speed) * 3600;
-        setTimeout(() => {
+        setTimeout(async () => {
+          await supabase.from("airballoons").upsert(airBallon);
           loadRoute(airBallon);
         }, steps * 1000);
       }
     } catch (error) {
       console(error);
       airBallon.state = false;
-      const { data } = await supabase
-        .from("airballoons")
-        .upsert(airBallon)
-        .select();
+      await supabase.from("airballoons").upsert(airBallon);
     }
   }
   loadRoute(data[0]);

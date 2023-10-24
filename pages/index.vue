@@ -4,7 +4,7 @@
       <v-col cols="12">
         <v-card>
           <v-card-text>
-            <v-row>
+            <!--  <v-row>
               <v-col cols="2" v-for="(item, index) in airBallons" :key="index">
                 <v-card color="white">
                   <v-img class="mx-auto" width="50" @click="() => {
@@ -13,8 +13,8 @@
                   }" :src="item.image"> </v-img>
                 </v-card>
               </v-col>
-            </v-row>
-            <v-row justify="center">
+            </v-row> -->
+            <v-row justify="center" v-show="showCoordenates">
               {{ locationAirballon }}
             </v-row>
             <v-row justify="center">
@@ -37,13 +37,13 @@
               </v-card>
             </v-row>
             <v-row>
-              <v-container id="map" fluid style="height: 55vh">
+              <v-container id="map" fluid style="height: 60vh">
 
               </v-container>
             </v-row>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
+            <v-btn v-show="showCoordenates" color="blue" class="mx-auto" @click="flyAirballon()">
               Go
             </v-btn>
           </v-card-actions>
@@ -52,12 +52,13 @@
     </v-row>
     <v-bottom-navigation grow>
       <v-btn @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn>
+      <v-btn @click="dialogAdd = true"> <v-icon>mdi-plus</v-icon> </v-btn>
       <v-btn @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
-      <!--  <v-btn @click="dialogTable = true"> <v-icon>mdi-plus</v-icon> </v-btn> -->
+      <v-btn @click=""> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
 
 
     </v-bottom-navigation>
-    <v-dialog v-model="dialogAirballoon" max-width="300">
+    <!-- <v-dialog v-model="dialogAirballoon" max-width="300">
       <v-card class="text-center">
 
         <v-card-title> <v-img width="200" class="mx-auto" :src="airballoon.image"></v-img> </v-card-title>
@@ -81,7 +82,7 @@
           <v-btn rounded variant="outlined" @click="chooseAirballoon()"> select </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <v-dialog v-model="dialogTable" min-width="300">
       <v-table height="320px" fixed-header>
         <thead>
@@ -115,6 +116,36 @@
         </tbody>
       </v-table>
     </v-dialog>
+    <v-dialog v-model="dialogAdd" max-width="500" >
+      <v-carousel hide-delimiters >
+        <v-carousel-item v-for="(a, i) in airBallons" :key="i">
+          <v-card class="text-center" >
+
+            <v-card-title> <v-img width="200" class="mx-auto" :src="a.image"></v-img> </v-card-title>
+
+            <v-card-subtitle> Conditions </v-card-subtitle>
+
+            <v-card-text>
+              <v-icon>mdi-thermometer</v-icon> : {{ a.conditions.temp[0] }}&deg;C to {{
+                a.conditions.temp[1] }}&deg;C
+            </v-card-text>
+            <v-card-text>
+              <v-icon>mdi-water</v-icon> : {{ a.conditions.humidity[0] }}% to {{
+                a.conditions.humidity[1] }}%
+            </v-card-text>
+            <v-card-text>
+              <v-icon>mdi-speedometer</v-icon> : {{ a.conditions.windSpeed[0] }}km/h to {{
+                a.conditions.windSpeed[1] }}km/h
+            </v-card-text>
+
+            <v-card-actions class="justify-center">
+              <v-btn rounded variant="outlined" @click="chooseAirballoon(a)"> select </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-carousel-item>
+      </v-carousel>
+
+    </v-dialog>
 
   </v-container>
 </template>
@@ -125,6 +156,8 @@ export default {
   data: () => ({
     dialogAirballoon: false,
     dialogTable: false,
+    dialogAdd: false,
+    showCoordenates: true,
     intervals: [],
     locationAirballon: [0, 0],
     markerInit: {},
@@ -204,6 +237,7 @@ export default {
     seeAll() {
       // Remove the markerInit layer
       this.markerInit.remove();
+      this.showCoordenates = false
 
       // Create an array of features
       const arrayFeatures = this.userAirBallons.map(a => ({
@@ -249,58 +283,52 @@ export default {
         this.infoAirballon.wind = this.wintdeg(data.value.wind.deg);
         this.infoAirballon.rain = data.value.rain;
       } catch (error) {
-
+        console.log(error)
       }
     },
     async seeAirballon(item) {
       // Remove the markerInit layer and show the info panel
       this.markerInit.remove();
+      this.showCoordenates = false
       this.map.jumpTo({
         center: item.point,
         zoom: 1,
       });
 
-
-
       this.getWeather(item.point)
+      this.locationAirballon = item.point
 
-      try {
+      // Center the map on the selected airballon
 
-        this.locationAirballon = item.point
+      // Hide 'point' and 'allPoints' layers
+      this.map.setLayoutProperty('point', 'visibility', 'none');
+      this.map.setLayoutProperty('allPoints', 'visibility', 'none');
 
-        // Center the map on the selected airballon
+      // Load and update the 'airBallon' image
+      this.map.loadImage(`/Globos/${item.airballoonId}.png`, (error, image) => {
+        if (error) throw error;
+        this.map.updateImage('airBallon', image);
+      });
 
-        // Hide 'point' and 'allPoints' layers
-        this.map.setLayoutProperty('point', 'visibility', 'none');
-        this.map.setLayoutProperty('allPoints', 'visibility', 'none');
+      // Update point and route data sources
+      this.point.geometry.coordinates = item.point;
 
-        // Load and update the 'airBallon' image
-        this.map.loadImage(`/Globos/${item.airballoonId}.png`, (error, image) => {
-          if (error) throw error;
-          this.map.updateImage('airBallon', image);
-        });
+      this.map.getSource('point').setData(this.point);
+      this.routeBefore.geometry.coordinates = item.route
+      this.map.getSource('routeBefore').setData(this.routeBefore);
 
-        // Update point and route data sources
-        this.point.features[0].geometry.coordinates = item.point;
-
-        this.map.getSource('point').setData(this.point);
-        this.routeBefore.geometry.coordinates = item.route
-        this.map.getSource('routeBefore').setData(this.routeBefore);
-
-        // Show the 'route' layer
-        this.map.setLayoutProperty('point', 'visibility', 'visible');
-        this.map.setLayoutProperty('route', 'visibility', 'visible');
-        // Check if it needs to be resumed
-        const fechaMenosUnaHora = new Date();
-        fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-        if (new Date(item.updated_at) < fechaMenosUnaHora) {
-          this.reanudate(item);
-        }
-        this.dialogTable = false
-
-      } catch (error) {
-        console.log(error);
+      // Show the 'route' layer
+      this.map.setLayoutProperty('route', 'visibility', 'visible');
+      this.map.setLayoutProperty('point', 'visibility', 'visible');
+      // Check if it needs to be resumed
+      const fechaMenosUnaHora = new Date();
+      fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
+      if (new Date(item.updated_at) < fechaMenosUnaHora) {
+        this.reanudate(item);
       }
+      this.dialogTable = false
+
+
     },
 
     setMarker() {
@@ -325,10 +353,12 @@ export default {
       });
     },
 
-    chooseAirballoon() {
-      this.dialogAirballoon = false
+    chooseAirballoon(item) {
+      this.airballoon = item
+      this.dialogAdd = false
       this.markerInit.remove()
       this.setMarker()
+      this.showCoordenates = true
     },
 
     async reanudate(item) {
@@ -361,6 +391,7 @@ export default {
           }
         })
         this.markerInit.remove()
+        this.showCoordenates = false
         this.dialogTable = true
         alert("Airballoon put to flight successfully")
       } catch (error) {
@@ -433,12 +464,6 @@ export default {
       })
     })
 
-
-
-
-
-
-
     await this.map.loadImage(`/Globos/1.png`, (error, image) => {
       if (error) throw error
       this.map.addImage(`airBallon`, image)
@@ -470,19 +495,16 @@ export default {
     this.map.addControl(new CustomControl('humidity-layer', "water"), "top-right");
     this.map.addControl(new CustomControl('wind-layer', "wind-power"), "top-right");
 
-    this.point = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'Point',
-            coordinates: [],
-          },
-        },
-      ],
-    }
+    this.point =
+    {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Point',
+        coordinates: [],
+      },
+    };
+
 
     let points = {
       type: 'FeatureCollection',
