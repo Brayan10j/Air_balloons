@@ -54,7 +54,7 @@
       <v-btn @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn>
       <v-btn @click="dialogAdd = true"> <v-icon>mdi-plus</v-icon> </v-btn>
       <v-btn @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
-      <v-btn @click=""> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
+      <v-btn @click="dialogTournaments = true"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
 
 
     </v-bottom-navigation>
@@ -116,10 +116,62 @@
         </tbody>
       </v-table>
     </v-dialog>
-    <v-dialog v-model="dialogAdd" max-width="500" >
-      <v-carousel hide-delimiters >
+
+    <v-dialog v-model="dialogTournaments">
+
+
+
+      <v-table fixed-header>
+        <thead>
+          <tr>
+            <v-toolbar collapse >
+              <v-spacer></v-spacer>
+              <v-btn>
+                Create
+              </v-btn>
+            </v-toolbar>
+
+          </tr>
+          <tr>
+            <!--    <th class="text-left">
+                Id
+              </th> -->
+            <th class="text-left">
+              Name
+            </th>
+            <th class="text-left">
+              Description
+            </th>
+            <th class="text-left">
+              Participants
+            </th>
+            <th class="text-left">
+              Value
+            </th>
+            <th class="text-left">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in tournaments" :key="item.id">
+            <!-- <td>{{ item.id }} </td> -->
+            <td>{{ item.title }}</td>
+            <td>{{ item.descripton }}</td>
+            <td>{{ item.participants.length }} / {{ item.maxParticipants}}</td>
+            <td>{{ item.value }}</td>
+            <td><v-icon @click="" color="blue">mdi-plus</v-icon></td>
+          </tr>
+        </tbody>
+      </v-table>
+
+
+
+    </v-dialog>
+    <v-dialog v-model="dialogAdd" max-width="500">
+      <v-carousel hide-delimiters>
         <v-carousel-item v-for="(a, i) in airBallons" :key="i">
-          <v-card class="text-center" >
+          <v-card class="text-center">
 
             <v-card-title> <v-img width="200" class="mx-auto" :src="a.image"></v-img> </v-card-title>
 
@@ -157,6 +209,7 @@ export default {
     dialogAirballoon: false,
     dialogTable: false,
     dialogAdd: false,
+    dialogTournaments: false,
     showCoordenates: true,
     intervals: [],
     locationAirballon: [0, 0],
@@ -232,6 +285,22 @@ export default {
       humidity: 0,
       speed: 0,
     },
+    tournaments: [
+      {
+        title: "tournament 1",
+        descripton: "last balloon in flight",
+        participants: [],
+        maxParticipants: 10,
+        value: 10
+      },
+      {
+        title: "tournament 2",
+        descripton: "longest journey",
+        participants: [],
+        maxParticipants: 20,
+        value: 5
+      }
+    ]
   }),
   methods: {
     seeAll() {
