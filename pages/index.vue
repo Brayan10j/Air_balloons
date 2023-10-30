@@ -41,6 +41,15 @@
 
               </v-container>
             </v-row>
+            <v-row>
+              <v-col>
+                <v-img width="500" class="mx-auto" v-show="weatherLayer !== ''"
+                  :src="`/Maps/InfoLayers/${weatherLayer}.png`">
+
+                </v-img>
+              </v-col>
+
+            </v-row>
           </v-card-text>
           <v-card-actions>
             <v-btn v-show="showCoordenates" color="blue" class="mx-auto" @click="flyAirballon()">
@@ -58,31 +67,6 @@
 
 
     </v-bottom-navigation>
-    <!-- <v-dialog v-model="dialogAirballoon" max-width="300">
-      <v-card class="text-center">
-
-        <v-card-title> <v-img width="200" class="mx-auto" :src="airballoon.image"></v-img> </v-card-title>
-
-        <v-card-subtitle> Conditions </v-card-subtitle>
-
-        <v-card-text>
-          <v-icon>mdi-thermometer</v-icon> : {{ airballoon.conditions.temp[0] }}&deg;C to {{
-            airballoon.conditions.temp[1] }}&deg;C
-        </v-card-text>
-        <v-card-text>
-          <v-icon>mdi-water</v-icon> : {{ airballoon.conditions.humidity[0] }}% to {{
-            airballoon.conditions.humidity[1] }}%
-        </v-card-text>
-        <v-card-text>
-          <v-icon>mdi-speedometer</v-icon> : {{ airballoon.conditions.windSpeed[0] }}km/h to {{
-            airballoon.conditions.windSpeed[1] }}km/h
-        </v-card-text>
-
-        <v-card-actions class="justify-center">
-          <v-btn rounded variant="outlined" @click="chooseAirballoon()"> select </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog> -->
     <v-dialog v-model="dialogTable" min-width="300">
       <v-table height="320px" fixed-header>
         <thead>
@@ -118,15 +102,12 @@
     </v-dialog>
 
     <v-dialog v-model="dialogTournaments">
-
-
-
       <v-table fixed-header>
         <thead>
           <tr>
-            <v-toolbar collapse >
+            <v-toolbar collapse>
               <v-spacer></v-spacer>
-              <v-btn>
+              <v-btn @click="dialogCreate= true">
                 Create
               </v-btn>
             </v-toolbar>
@@ -158,14 +139,30 @@
             <!-- <td>{{ item.id }} </td> -->
             <td>{{ item.title }}</td>
             <td>{{ item.descripton }}</td>
-            <td>{{ item.participants.length }} / {{ item.maxParticipants}}</td>
+            <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
             <td>{{ item.value }}</td>
-            <td><v-icon @click="" color="blue">mdi-plus</v-icon></td>
+            <td><v-icon v-show="item.participants.length < item.maxParticipants" @click="addParticipant(item)" color="blue">mdi-plus</v-icon></td>
+            <td>
+            <v-btn color="green" v-show="item.participants.length == item.maxParticipants" > Start </v-btn></td>
           </tr>
         </tbody>
       </v-table>
 
+      <v-dialog v-model="dialogCreate">
+        <v-card>
+          <v-card-text>
+            <v-text-field label="title"></v-text-field>
+            <v-text-field type="number" label="participants"></v-text-field>
+            <v-text-field prefix="$" type="number" label="value"></v-text-field>
 
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn @click="dialogCreate = false">
+                Create
+              </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
     </v-dialog>
     <v-dialog v-model="dialogAdd" max-width="500">
@@ -210,7 +207,9 @@ export default {
     dialogTable: false,
     dialogAdd: false,
     dialogTournaments: false,
+    dialogCreate: false,
     showCoordenates: true,
+    weatherLayer: "",
     intervals: [],
     locationAirballon: [0, 0],
     markerInit: {},
@@ -285,6 +284,12 @@ export default {
       humidity: 0,
       speed: 0,
     },
+    weatherLayers: [
+      { name: "temperature-layer", icon: "thermometer", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/temperature/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" },
+      { name: "humidity-layer", icon: "water", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/humidity/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" },
+      { name: "wind-layer", icon: "wind-power", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/windSpeed/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" }
+
+    ],
     tournaments: [
       {
         title: "tournament 1",
@@ -303,6 +308,14 @@ export default {
     ]
   }),
   methods: {
+    addParticipant(tournament){
+      if(tournament.participants.length < tournament.maxParticipants){
+        tournament.participants.push({})
+      }else{
+        alert("tournament full")
+      }
+      
+    },
     seeAll() {
       // Remove the markerInit layer
       this.markerInit.remove();
@@ -446,6 +459,22 @@ export default {
           a.kilometers += a.step
         }, 1000))
     },
+    changeWheatherLayer(idLayer) {
+      this.weatherLayers.forEach((l) => {
+        if (l.name == idLayer) {
+          if (this.map.getLayoutProperty(idLayer, 'visibility') == 'none') {
+            this.weatherLayer = idLayer
+            this.map.setLayoutProperty(idLayer, 'visibility', 'visible')
+          }
+          else {
+            this.weatherLayer = ""
+            this.map.setLayoutProperty(idLayer, 'visibility', 'none')
+          }
+        } else {
+          this.map.setLayoutProperty(l.name, 'visibility', 'none')
+        }
+      })
+    },
     async flyAirballon() {
       try {
         await useFetch('/airballoon', {
@@ -540,17 +569,21 @@ export default {
     )
 
     class CustomControl {
-      constructor(idLayer, icon) {
+      constructor(idLayer, icon, ctx) {
         this.idLayer = idLayer;
         this.icon = icon;
+        this.ctx = ctx
       }
       onAdd(map) {
         this._map = map;
         this._container = document.createElement('div');
+        this._container.id = this.idLayer;
         this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group text-black ";
         this._container.innerHTML = `<button class="mapboxgl-ctrl-icon mdi mdi-${this.icon}" ></button>`;
         this._container.addEventListener("contextmenu", (e) => e.preventDefault());
-        this._container.addEventListener("click", () => { map.setLayoutProperty(this.idLayer, 'visibility', map.getLayoutProperty(this.idLayer, 'visibility') == "none" ? "visible" : "none") });
+        this._container.addEventListener("click", () => {
+          this.ctx.changeWheatherLayer(this.idLayer)
+        });
         return this._container;
       }
 
@@ -560,9 +593,6 @@ export default {
       }
     }
 
-    this.map.addControl(new CustomControl('temperature-layer', "thermometer"), "top-right");
-    this.map.addControl(new CustomControl('humidity-layer', "water"), "top-right");
-    this.map.addControl(new CustomControl('wind-layer', "wind-power"), "top-right");
 
     this.point =
     {
@@ -605,6 +635,30 @@ export default {
 
     this.map.on('load', async () => {
 
+      this.weatherLayers.forEach((l) => {
+        this.map.addControl(new CustomControl(l.name, l.icon, this), "top-right");
+        this.map.addLayer({
+          id: l.name,
+          type: 'raster',
+          source: {
+            type: 'raster',
+            tiles: [l.image
+            ],
+            tileSize: 1024,
+            maxzoom: 0,
+            minzoom: 0,
+          },
+          layout: {
+            "visibility": "none"
+          },
+          paint: {
+            //"raster-saturation": 0.2,
+            "raster-opacity": 0.8
+            //"visibility": "none"
+          }
+        });
+      })
+
       this.map.addSource('routeBefore', {
         type: 'geojson',
         data: this.routeBefore,
@@ -619,72 +673,6 @@ export default {
           'line-color': '#007cbf',
         },
       })
-
-      this.map.addLayer({
-        id: 'temperature-layer',
-        type: 'raster',
-        source: {
-          type: 'raster',
-          tiles: [
-            "https://api.tomorrow.io/v4/map/tile/0/0/0/temperature/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
-          ],
-          tileSize: 1024,
-          maxzoom: 0,
-          minzoom: 0,
-        },
-        layout: {
-          "visibility": "none"
-        },
-        paint: {
-          //"raster-saturation": 0.2,
-          "raster-opacity": 0.8
-          //"visibility": "none"
-        }
-      });
-
-      this.map.addLayer({
-        id: 'humidity-layer',
-        type: 'raster',
-        source: {
-          type: 'raster',
-          tiles: [
-            "https://api.tomorrow.io/v4/map/tile/0/0/0/humidity/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
-          ],
-          tileSize: 1024,
-          maxzoom: 0,
-          minzoom: 0,
-        },
-        layout: {
-          "visibility": "none"
-        },
-        paint: {
-          "raster-opacity": 0.7,
-          //"visibility": "none"
-        }
-      });
-
-      this.map.addLayer({
-        id: 'wind-layer',
-        type: 'raster',
-        source: {
-          type: 'raster',
-          tiles: [
-            "https://api.tomorrow.io/v4/map/tile/0/0/0/windSpeed/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE"
-          ],
-          tileSize: 1024,
-          maxzoom: 0,
-          minzoom: 0,
-        },
-        layout: {
-          "visibility": "none"
-        },
-        paint: {
-          "raster-opacity": 0.8
-          //"raster-saturation": 0.6,
-          //"visibility": "none"
-        }
-      });
-
 
 
       this.map.addSource('point', {

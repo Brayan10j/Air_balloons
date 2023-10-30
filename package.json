@@ -12,11 +12,14 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
+    "mapbox-gl": "^2.15.0",
     "nuxt": "^3.7.4",
+    "nuxt-mapbox": "1.4.5-1",
     "nuxt3-leaflet": "^1.0.12"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.1.2",
+    "@pinia/nuxt": "^0.5.1",
     "@turf/turf": "^6.5.0",
     "axios": "^1.5.1",
     "h3-js": "^4.1.0",

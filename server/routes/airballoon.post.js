@@ -132,8 +132,7 @@ export default defineEventHandler(async (event) => {
         }, steps * 1000);
       }
     } catch (error) {
-      console(error);
-      airBallon.state = false;
+      console.log(error);
       await supabase.from("airballoons").upsert(airBallon);
     }
   }
