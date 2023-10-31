@@ -1,13 +1,5 @@
 <template>
-    <v-btn @click="store.increment()">
-        clik
-    </v-btn>
     <v-container>
-
-
-
-
-        {{ store.count }}
         <MapboxMap map-id="map" :options="{
             style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
             center: [0, 0], // starting position
@@ -27,9 +19,6 @@
 </template>
 <script setup>
 
-const store = useMainStore()
-
-const dialog = ref(false)
 
 /* const markerRef = defineMapboxMarker("marker1", { draggable: true }, "markerCustom", (marker) => {
     marker.setLngLat([5, 5])

@@ -67,6 +67,40 @@
 
 
     </v-bottom-navigation>
+    <v-dialog v-model="diaglogMapSelect" scrim="blue">
+      <v-card class="text-center ">
+        <v-card-title>
+          Location Air-balloon
+        </v-card-title>
+        <v-card-text>
+          <MapboxMap map-id="mapSelect" :options="{
+            style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
+            center: [0, 0], // starting position
+            zoom: 0.2, // starting zoom
+            projection: 'globe',
+            attributionControl: false,
+            renderWorldCopies: false
+          }" style="position: relative ; height: 300px;">
+
+
+            <MapboxDefaultMarker marker-id="marker1" :options="{
+              draggable: true,
+            }" :lnglat="[0, 0]"></MapboxDefaultMarker>
+
+          </MapboxMap>
+        </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn variant="outlined">
+            Select location
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+
+
+
+
+
+    </v-dialog>
     <v-dialog v-model="dialogTable" min-width="300">
       <v-table height="320px" fixed-header>
         <thead>
@@ -95,7 +129,8 @@
             <td>{{ item.kilometers.toFixed(4) }}
             </td>
             <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-            <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon></td>
+            <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon> <v-btn v-show="!item.state"
+                @click="deleteAirBalloon(item)"><v-icon color="red">mdi-delete</v-icon> </v-btn></td>
           </tr>
         </tbody>
       </v-table>
@@ -107,7 +142,7 @@
           <tr>
             <v-toolbar collapse>
               <v-spacer></v-spacer>
-              <v-btn @click="dialogCreate= true">
+              <v-btn @click="dialogCreate = true">
                 Create
               </v-btn>
             </v-toolbar>
@@ -141,9 +176,11 @@
             <td>{{ item.descripton }}</td>
             <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
             <td>{{ item.value }}</td>
-            <td><v-icon v-show="item.participants.length < item.maxParticipants" @click="addParticipant(item)" color="blue">mdi-plus</v-icon></td>
+            <td><v-icon v-show="item.participants.length < item.maxParticipants" @click="addParticipant(item)"
+                color="blue">mdi-plus</v-icon></td>
             <td>
-            <v-btn color="green" v-show="item.participants.length == item.maxParticipants" > Start </v-btn></td>
+              <v-btn color="green" v-show="item.participants.length == item.maxParticipants"> Start </v-btn>
+            </td>
           </tr>
         </tbody>
       </v-table>
@@ -158,8 +195,8 @@
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn @click="dialogCreate = false">
-                Create
-              </v-btn>
+              Create
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -207,6 +244,7 @@ export default {
     dialogTable: false,
     dialogAdd: false,
     dialogTournaments: false,
+    diaglogMapSelect: false,
     dialogCreate: false,
     showCoordenates: true,
     weatherLayer: "",
@@ -308,13 +346,20 @@ export default {
     ]
   }),
   methods: {
-    addParticipant(tournament){
-      if(tournament.participants.length < tournament.maxParticipants){
-        tournament.participants.push({})
-      }else{
-        alert("tournament full")
+    addParticipant(tournament) {
+      this.diaglogMapSelect = true
+      const airballoon = this.airBallons[Math.floor(Math.random() * 6)]
+      if (tournament.participants.length < tournament.maxParticipants) {
+        tournament.participants.push({
+          owner: "0x",
+          airballoonId: airballoon.id,
+          point: this.locationAirballon,
+          kilometers: 0,
+          step: this.infoAirballon.speed / 3600,
+          state: true,
+          route: [[this.locationAirballon, this.locationAirballon]],
+        })
       }
-      
     },
     seeAll() {
       // Remove the markerInit layer
@@ -475,11 +520,33 @@ export default {
         }
       })
     },
+    async deleteAirBalloon(item) {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts"
+        });
+        if (accounts[0] == item.owner) {
+          const supabase = useSupabaseClient()
+          const { error } = await supabase
+            .from('airballoons')
+            .delete()
+            .eq('id', item.id)
+        } else {
+          alert("You aren't the owner")
+        }
+      } catch (error) {
+        alert(error)
+      }
+
+    },
     async flyAirballon() {
       try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts"
+        });
         await useFetch('/airballoon', {
           method: "POST", body: {
-            owner: "0x",
+            owner: accounts[0],
             airballoonId: this.airballoon.id,
             point: this.locationAirballon,
             kilometers: 0,
