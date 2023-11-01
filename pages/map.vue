@@ -9,6 +9,8 @@
             renderWorldCopies: false
         }">
 
+        <div id="custom" style="width: 50px; height: 50px; background-size: 100%; background-color: blue;"> </div>
+
 
             <MapboxDefaultMarker marker-id="marker1" :options="{
                 draggable: true,

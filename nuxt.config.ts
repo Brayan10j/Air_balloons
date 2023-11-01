@@ -23,7 +23,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ["nuxt-vuetify", "@nuxtjs/supabase", 'nuxt3-leaflet', 'nuxt-mapbox'],
+  modules: ["nuxt-vuetify", "@nuxtjs/supabase", 'nuxt3-leaflet', 'nuxt-mapbox', '@pinia/nuxt'],
   vuetify: {
     theme: {
       defaultTheme: "dark",

@@ -63,44 +63,8 @@
       <v-btn @click="seeAll()"> <v-icon>mdi-earth</v-icon> </v-btn>
       <v-btn @click="dialogAdd = true"> <v-icon>mdi-plus</v-icon> </v-btn>
       <v-btn @click="dialogTable = true"> <v-icon>mdi-list-box-outline</v-icon> </v-btn>
-      <v-btn @click="dialogTournaments = true"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
-
-
+      <v-btn to="/tournaments"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
     </v-bottom-navigation>
-    <v-dialog v-model="diaglogMapSelect" scrim="blue">
-      <v-card class="text-center ">
-        <v-card-title>
-          Location Air-balloon
-        </v-card-title>
-        <v-card-text>
-          <MapboxMap map-id="mapSelect" :options="{
-            style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
-            center: [0, 0], // starting position
-            zoom: 0.2, // starting zoom
-            projection: 'globe',
-            attributionControl: false,
-            renderWorldCopies: false
-          }" style="position: relative ; height: 300px;">
-
-
-            <MapboxDefaultMarker marker-id="marker1" :options="{
-              draggable: true,
-            }" :lnglat="[0, 0]"></MapboxDefaultMarker>
-
-          </MapboxMap>
-        </v-card-text>
-        <v-card-actions class="justify-center">
-          <v-btn variant="outlined">
-            Select location
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-
-
-
-
-
-    </v-dialog>
     <v-dialog v-model="dialogTable" min-width="300">
       <v-table height="320px" fixed-header>
         <thead>
@@ -135,73 +99,6 @@
         </tbody>
       </v-table>
     </v-dialog>
-
-    <v-dialog v-model="dialogTournaments">
-      <v-table fixed-header>
-        <thead>
-          <tr>
-            <v-toolbar collapse>
-              <v-spacer></v-spacer>
-              <v-btn @click="dialogCreate = true">
-                Create
-              </v-btn>
-            </v-toolbar>
-
-          </tr>
-          <tr>
-            <!--    <th class="text-left">
-                Id
-              </th> -->
-            <th class="text-left">
-              Name
-            </th>
-            <th class="text-left">
-              Description
-            </th>
-            <th class="text-left">
-              Participants
-            </th>
-            <th class="text-left">
-              Value
-            </th>
-            <th class="text-left">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in tournaments" :key="item.id">
-            <!-- <td>{{ item.id }} </td> -->
-            <td>{{ item.title }}</td>
-            <td>{{ item.descripton }}</td>
-            <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
-            <td>{{ item.value }}</td>
-            <td><v-icon v-show="item.participants.length < item.maxParticipants" @click="addParticipant(item)"
-                color="blue">mdi-plus</v-icon></td>
-            <td>
-              <v-btn color="green" v-show="item.participants.length == item.maxParticipants"> Start </v-btn>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-
-      <v-dialog v-model="dialogCreate">
-        <v-card>
-          <v-card-text>
-            <v-text-field label="title"></v-text-field>
-            <v-text-field type="number" label="participants"></v-text-field>
-            <v-text-field prefix="$" type="number" label="value"></v-text-field>
-
-          </v-card-text>
-          <v-card-actions class="justify-center">
-            <v-btn @click="dialogCreate = false">
-              Create
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-    </v-dialog>
     <v-dialog v-model="dialogAdd" max-width="500">
       <v-carousel hide-delimiters>
         <v-carousel-item v-for="(a, i) in airBallons" :key="i">
@@ -232,7 +129,6 @@
       </v-carousel>
 
     </v-dialog>
-
   </v-container>
 </template>
 
@@ -243,9 +139,6 @@ export default {
     dialogAirballoon: false,
     dialogTable: false,
     dialogAdd: false,
-    dialogTournaments: false,
-    diaglogMapSelect: false,
-    dialogCreate: false,
     showCoordenates: true,
     weatherLayer: "",
     intervals: [],
@@ -265,57 +158,7 @@ export default {
       }
     },
     kilometers: 0,
-    airBallons: [
-      {
-        id: "1",
-        image: '/Globos/1.png',
-        conditions: {
-          temp: [0, 50],
-          humidity: [0, 70],
-          windSpeed: [0, 35]
-        }
-      },
-      {
-        id: "2", image: '/Globos/2.png',
-        conditions: {
-          temp: [-100, 0],
-          humidity: [50, 100],
-          windSpeed: [0, 50]
-        }
-      },
-      {
-        id: "3", image: '/Globos/3.png',
-        conditions: {
-          temp: [0, 20],
-          humidity: [50, 100],
-          windSpeed: [0, 50]
-        }
-      },
-      {
-        id: "4", image: '/Globos/4.png',
-        conditions: {
-          temp: [20, 50],
-          humidity: [0, 50],
-          windSpeed: [0, 100]
-        }
-      },
-      {
-        id: "5", image: '/Globos/5.png',
-        conditions: {
-          temp: [-100, 100],
-          humidity: [0, 100],
-          windSpeed: [0, 30]
-        }
-      },
-      {
-        id: "6", image: '/Globos/6.png',
-        conditions: {
-          temp: [-100, 100],
-          humidity: [0, 100],
-          windSpeed: [40, 120]
-        }
-      },
-    ],
+    airBallons: [],
     infoAirballon: {
       temp: 0,
       wind: 0,
@@ -328,39 +171,9 @@ export default {
       { name: "wind-layer", icon: "wind-power", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/windSpeed/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" }
 
     ],
-    tournaments: [
-      {
-        title: "tournament 1",
-        descripton: "last balloon in flight",
-        participants: [],
-        maxParticipants: 10,
-        value: 10
-      },
-      {
-        title: "tournament 2",
-        descripton: "longest journey",
-        participants: [],
-        maxParticipants: 20,
-        value: 5
-      }
-    ]
   }),
   methods: {
-    addParticipant(tournament) {
-      this.diaglogMapSelect = true
-      const airballoon = this.airBallons[Math.floor(Math.random() * 6)]
-      if (tournament.participants.length < tournament.maxParticipants) {
-        tournament.participants.push({
-          owner: "0x",
-          airballoonId: airballoon.id,
-          point: this.locationAirballon,
-          kilometers: 0,
-          step: this.infoAirballon.speed / 3600,
-          state: true,
-          route: [[this.locationAirballon, this.locationAirballon]],
-        })
-      }
-    },
+
     seeAll() {
       // Remove the markerInit layer
       this.markerInit.remove();
@@ -450,7 +263,7 @@ export default {
       // Check if it needs to be resumed
       const fechaMenosUnaHora = new Date();
       fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-      if (new Date(item.updated_at) < fechaMenosUnaHora) {
+      if (new Date(item.updated_at) < fechaMenosUnaHora && item.state) {
         this.reanudate(item);
       }
       this.dialogTable = false
@@ -568,6 +381,8 @@ export default {
   },
   async mounted() {
     const supabase = useSupabaseClient()
+    const store = useMainStore()
+    this.airBallons = store.airBalloons
 
     let { data, error } = await supabase
       .from('airballoons')

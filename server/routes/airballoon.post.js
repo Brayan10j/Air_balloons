@@ -126,12 +126,11 @@ export default defineEventHandler(async (event) => {
         airBallon.kilometers = turf.length(line);
         airBallon.step = windSpeed / 3600;
 
-        if (steps !== NaN) {
-          setTimeout(async () => {
-            await supabase.from("airballoons").upsert(airBallon);
-            loadRoute(airBallon);
-          }, steps * 1000);
-        }
+        
+        setTimeout(async () => {
+          await supabase.from("airballoons").upsert(airBallon);
+          loadRoute(airBallon);
+        }, steps * 1000);
       }
     } catch (error) {
       console.log(error);
