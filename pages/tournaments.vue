@@ -257,17 +257,19 @@ async function addParticipant() {
     } catch (error) {
         alert(error)
     }
-
-
-
 }
 
 async function createTournament() {
-    await supabase
-        .from('tournaments')
-        .insert([selectTournament.value])
-        .select()
-    dialogCreate.value = false
+    try {
+        await supabase
+            .from('tournaments')
+            .insert([selectTournament.value])
+            .select()
+        dialogCreate.value = false
+    } catch (error) {
+        alert(error)
+    }
+
 }
 
 async function claimTournament() {
@@ -281,7 +283,7 @@ async function claimTournament() {
                 .delete()
                 .eq('id', selectTournament.value.id)
             dialogViewTournament.value = false
-        }else {
+        } else {
             alert("you are't the winner")
         }
     } catch (error) {
@@ -291,22 +293,27 @@ async function claimTournament() {
 }
 
 async function viewTournament(tournament) {
-    winnerTournament.value = undefined
-    selectTournament.value = tournament
-    let { data, error } = await supabase
-        .from('airballoons')
-        .select('*')
-        .eq('tournamentID', tournament.id)
+    try {
+        winnerTournament.value = undefined
+        selectTournament.value = tournament
+        let { data, error } = await supabase
+            .from('airballoons')
+            .select('*')
+            .eq('tournamentID', tournament.id)
 
-    winners.value = data.filter((t) => t.state)
-    if (winners.value.length == 1) {
-        winnerTournament.value = {
-            airBalloon: winners.value[0],
-            state: true
+        winners.value = data.filter((t) => t.state)
+        if (winners.value.length == 1) {
+            winnerTournament.value = {
+                airBalloon: winners.value[0],
+                state: true
+            }
         }
+        losers.value = data.filter((t) => !t.state)
+        dialogViewTournament.value = true
+    } catch (error) {
+        alert(error)
     }
-    losers.value = data.filter((t) => !t.state)
-    dialogViewTournament.value = true
+
 }
 
 async function startTournament(item) {

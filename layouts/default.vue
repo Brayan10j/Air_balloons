@@ -5,7 +5,11 @@
         <v-icon  color="grey"> mdi-home </v-icon>
       </v-btn>
       <v-spacer />
-      <v-btn v-show="!unloged" rounded>
+      <v-btn v-show="unloged" @click="login()" rounded variant="outlined" size="small" class="mr-2">
+
+        Log in
+      </v-btn>
+      <v-btn v-show="!unloged" rounded >
         <v-icon color="grey"> mdi-account </v-icon>
         {{
           user.slice(0, 5) +
@@ -18,22 +22,6 @@
       <slot />
       
     </v-main>
-    <v-dialog v-model="unloged" persistent>
-        <v-card width="300" class="mx-auto">
-          <v-card-text class="text-center">
-            <div> Welcome to Air-balloons </div>
-            <br>
-
-            <v-icon color="grey" size="x-large"> mdi-airballoon </v-icon>
-          </v-card-text>
-          <v-card-actions class="justify-center ">
-            <v-btn variant="outlined" rounded @click="login()" size="small">
-              Join
-            </v-btn>
-          </v-card-actions>
-
-        </v-card>
-      </v-dialog>
   </v-app>
 </template>
 

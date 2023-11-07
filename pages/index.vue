@@ -93,8 +93,22 @@
             <td>{{ item.kilometers.toFixed(4) }}
             </td>
             <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-            <td><v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon> <v-btn v-show="!item.state"
-                @click="deleteAirBalloon(item)"><v-icon color="red">mdi-delete</v-icon> </v-btn></td>
+            <td><v-menu>
+                <template v-slot:activator="{ props }">
+                  <v-btn icon="mdi-dots-vertical" v-bind="props"></v-btn>
+                </template>
+
+                <v-list>
+                  <v-list-item @click="seeAirballon(item)">
+                    view
+                  </v-list-item>
+                  <v-list-item  v-show="!item.state && item.tournamentID == null" @click="deleteAirBalloon(item)">
+                    delete 
+                  </v-list-item>
+                </v-list>
+              </v-menu><!-- <v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon> 
+              <v-btn v-show="!item.state && item.tournamentID == null" @click="deleteAirBalloon(item)"><v-icon color="red">mdi-delete</v-icon> </v-btn> -->
+            </td>
           </tr>
         </tbody>
       </v-table>
