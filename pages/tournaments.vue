@@ -2,7 +2,10 @@
     <v-container>
         <v-toolbar title="Application">
             <v-spacer></v-spacer>
-            <v-btn @click="dialogCreate = true">
+            <v-btn @click="() => {
+                selectTournament = { name: '', participants: [], maxParticipants: 10, value: 10, started: false };
+                dialogCreate = true;
+            }">
                 Create
             </v-btn>
 
@@ -31,7 +34,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="item in tournaments" :key="item.id">
+                <tr v-for="  item   in   tournaments  " :key="item.id">
                     <!-- <td>{{ item.id }} </td> -->
                     <td>{{ item.name }}</td>
                     <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
@@ -41,7 +44,8 @@
                             diaglogMapSelect = true
                             selectTournament = item
                             markerLocation = [0, 0]
-                        }"> <v-icon>mdi-plus</v-icon> </v-btn>
+                        }
+                            "> <v-icon>mdi-plus</v-icon> </v-btn>
                         <v-btn v-show="item.participants.length == item.maxParticipants && !item.started"
                             @click="startTournament(item)"> Start </v-btn>
                         <v-btn v-show="item.started" @click="viewTournament(item)"> View </v-btn>
@@ -56,11 +60,14 @@
             <v-card>
                 <v-card-title>
                     Tournament details </v-card-title>
-                <v-card-subtitle v-show="winnerTournament.state" class="text-right">
-                    Winner : {{ winnerTournament.airBalloon.id }} <v-btn variant="outlined" @click="claimTournament()">
-                        claim
-                    </v-btn>
+                <v-card-subtitle v-show="winnerTournament !== undefined">
+                    FINISHED
+
                 </v-card-subtitle>
+                <v-card-actions class="justify-center" v-show="winnerTournament !== undefined"> <v-btn variant="outlined"
+                        @click="claimTournament()">
+                        claim
+                    </v-btn> </v-card-actions>
                 <v-card-text>
                     <v-table fixed-header>
                         <thead>
@@ -81,7 +88,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in winners" :key="item.id">
+                            <tr v-for="  item   in   winners  " :key="item.id">
                                 <td>{{ item.id }} </td>
                                 <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
                                 <td>{{ item.state ? 'Live' : 'Crash' }}</td>
@@ -107,7 +114,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in losers" :key="item.id">
+                            <tr v-for="  item   in   losers  " :key="item.id">
                                 <td>{{ item.id }} </td>
                                 <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
                                 <td>{{ item.state ? 'Live' : 'Crash' }}</td>
@@ -152,15 +159,18 @@
                         projection: 'globe',
                         attributionControl: false,
                         renderWorldCopies: false
-                    }" style="position: relative ; height: 300px; width: 260px;">
+                    }
+                        " style="position: relative ; height: 300px; width: 260px;">
 
 
                         <MapboxDefaultMarker marker-id="marker1" :options="{
                             draggable: true,
-                        }" :lnglat="[0, 0]" @dragend="(m) => {
-    const lngLat = m.getLngLat();
-    markerLocation = [lngLat.lng, lngLat.lat]
-}">
+                        }
+                            " :lnglat="[0, 0]" @dragend="(m) => {
+        const lngLat = m.getLngLat();
+        markerLocation = [lngLat.lng, lngLat.lat]
+    }
+        ">
                         </MapboxDefaultMarker>
 
                     </MapboxMap>
@@ -185,10 +195,7 @@ const supabase = useSupabaseClient()
 
 const tournaments = ref([])
 const winners = ref([])
-const winnerTournament = ref({
-    state: false,
-    airBalloon: {}
-})
+const winnerTournament = ref(undefined)
 const losers = ref([])
 let { data, error } = await supabase
     .from('tournaments')
@@ -264,14 +271,27 @@ async function createTournament() {
 }
 
 async function claimTournament() {
-    const { error } = await supabase
-        .from('tournaments')
-        .delete()
-        .eq('id', selectTournament.value.id)
-    dialogViewTournament.value = false
+    try {
+        const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts"
+        });
+        if (winnerTournament.value.airBalloon.owner == accounts[0]) {
+            await supabase
+                .from('tournaments')
+                .delete()
+                .eq('id', selectTournament.value.id)
+            dialogViewTournament.value = false
+        }else {
+            alert("you are't the winner")
+        }
+    } catch (error) {
+        alert(error)
+    }
+
 }
 
 async function viewTournament(tournament) {
+    winnerTournament.value = undefined
     selectTournament.value = tournament
     let { data, error } = await supabase
         .from('airballoons')
@@ -280,8 +300,10 @@ async function viewTournament(tournament) {
 
     winners.value = data.filter((t) => t.state)
     if (winners.value.length == 1) {
-        winnerTournament.value.airBalloon = winners.value[0]
-        winnerTournament.value.state = true
+        winnerTournament.value = {
+            airBalloon: winners.value[0],
+            state: true
+        }
     }
     losers.value = data.filter((t) => !t.state)
     dialogViewTournament.value = true
