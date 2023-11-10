@@ -3,7 +3,12 @@ import { defineStore } from "pinia";
 export const useMainStore = defineStore("main", {
   state: () => ({
     count: 1000,
-    name: "Eduardo",
+    airBalloonSelected: {
+      airballoonId: "1",
+      route: [],
+      point: [0,0],
+      image: "/Globos/1.png"
+    },
     airBalloons: [
       {
         id: "1",
@@ -65,8 +70,8 @@ export const useMainStore = defineStore("main", {
     doubleCount: (state) => state.count * 2,
   },
   actions: {
-    increment() {
-      this.count++;
+    setAirBalloon(item) {
+      this.airBalloonSelected = item
     },
   },
 });

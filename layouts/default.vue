@@ -1,9 +1,6 @@
 <template>
   <v-app>
     <v-app-bar color="transparent" scroll-behavior="hide" flat>
-      <v-btn to="/" rounded>
-        <v-icon  color="grey"> mdi-home </v-icon>
-      </v-btn>
       <v-spacer />
       <v-btn v-show="unloged" @click="login()" rounded variant="outlined" size="small" class="mr-2">
 
@@ -22,12 +19,23 @@
       <slot />
       
     </v-main>
+    <v-bottom-navigation grow>
+      <v-btn to="/"> <v-icon>mdi-home</v-icon> </v-btn>
+      <v-btn to="/mapAdd"> <v-icon>mdi-plus</v-icon> </v-btn>
+      <v-btn to="/tournaments"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
+    </v-bottom-navigation>
   </v-app>
 </template>
 
 <script setup>
 const unloged = ref(true)
 const user = ref("")
+
+
+onMounted(() => {
+  login()
+})
+
 
 async function login() {
   if (!window.ethereum) {
