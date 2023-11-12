@@ -198,6 +198,7 @@ async function viewAirBalloon(item) {
       })
     }
     store.setAirBalloon(item);
+    store.setInfoWheather(await useWeather(item.point))
     useMapbox("mapView", (map) => {
       map.jumpTo({
         center: item.point,

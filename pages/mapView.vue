@@ -9,15 +9,15 @@
                     <v-row class="text-center">
                         <v-col>
                             <v-icon>mdi-water</v-icon>
-                            {{ infoAirballon.humidity }} %
+                            {{ store.InfoWheather.humidity }} %
                         </v-col>
                         <v-col>
-                            <v-icon>mdi-arrow-up-bold mdi-rotate-{{ infoAirballon.wind }}</v-icon>
-                            {{ infoAirballon.speed.toFixed(2) }} km/h
+                            <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
+                            {{ store.InfoWheather.speed.toFixed(2) }} km/h
                         </v-col>
                         <v-col>
                             <v-icon>mdi-thermometer</v-icon>
-                            {{ infoAirballon.temp }} &deg;C
+                            {{ store.InfoWheather.temp }} &deg;C
                             <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
                         </v-col>
                     </v-row>
@@ -92,18 +92,6 @@
 <script setup>
 
 const store = useMainStore()
-
-
-const infoAirballon = ref({
-    temp: 0,
-    wind: 0,
-    humidity: 0,
-    speed: 0,
-})
-
-/* let x = useWeather(store.airBalloonSelected.point)
-
-console.log("esto") */
 
 
 useMapboxBeforeLoad("mapView", async (map) => {

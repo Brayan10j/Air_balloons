@@ -3,11 +3,17 @@ import { defineStore } from "pinia";
 export const useMainStore = defineStore("main", {
   state: () => ({
     count: 1000,
+    InfoWheather: {
+      temp: 0,
+      wind: 0,
+      humidity: 0,
+      speed: 0,
+    },
     airBalloonSelected: {
       airballoonId: "1",
       route: [],
-      point: [0,0],
-      image: "/Globos/1.png"
+      point: [0, 0],
+      image: "/Globos/1.png",
     },
     airBalloons: [
       {
@@ -71,7 +77,10 @@ export const useMainStore = defineStore("main", {
   },
   actions: {
     setAirBalloon(item) {
-      this.airBalloonSelected = item
+      this.airBalloonSelected = item;
+    },
+    setInfoWheather(item) {
+      this.InfoWheather = item;
     },
   },
 });

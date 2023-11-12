@@ -42,15 +42,15 @@
                                 <v-row class="text-center">
                                     <v-col>
                                         <v-icon>mdi-water</v-icon>
-                                        {{ infoAirballon.humidity }} %
+                                        {{ store.InfoWheather.humidity }} %
                                     </v-col>
                                     <v-col>
-                                        <v-icon>mdi-arrow-up-bold mdi-rotate-{{ infoAirballon.wind }}</v-icon>
-                                        {{ infoAirballon.speed.toFixed(2) }} km/h
+                                        <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
+                                        {{ store.InfoWheather.speed.toFixed(2) }} km/h
                                     </v-col>
                                     <v-col>
                                         <v-icon>mdi-thermometer</v-icon>
-                                        {{ infoAirballon.temp }} &deg;C
+                                        {{ store.InfoWheather.temp }} &deg;C
                                         <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
                                     </v-col>
                                 </v-row>
@@ -68,10 +68,11 @@
                                 <MapboxDefaultMarker marker-id="marker" :options="{
                                     draggable: true,
                                 }
-                                    " :lnglat="[0, 0]" @dragend="(m) => {
+                                    " :lnglat="[0, 0]" @dragend="async (m) => {
         const lngLat = m.getLngLat();
         markerLocation = [lngLat.lng, lngLat.lat]
-        getWeather(markerLocation)
+        
+        store.setInfoWheather(await useWeather(markerLocation))
 
     }
         ">
@@ -110,18 +111,9 @@
 
 const store = useMainStore()
 
-const mapRef = useMapboxRef("mapAdd");
-
-
-
 const markerLocation = ref([])
 const weatherLayer = ref("")
-const infoAirballon = ref({
-    temp: 0,
-    wind: 0,
-    humidity: 0,
-    speed: 0,
-})
+
 const airBalloon = ref({
     id: "1",
     image: "/Globos/1.png",
@@ -202,30 +194,6 @@ useMapbox("mapAdd", (map) => {
 
 
 })
-
-
-function wintdeg(deg) {
-    let arr = [0, 45, 90, 135, 180, 225, 270, 315]
-    return arr[Math.round(((deg + 180) % 360) / 45)]
-}
-
-
-async function getWeather(location) {
-    try {
-        const { data } = await useFetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${location[1]}&lon=${location[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
-        );
-
-        // Update the infoAirballon object properties
-        infoAirballon.value.temp = data.value.main.temp;
-        infoAirballon.value.humidity = data.value.main.humidity;
-        infoAirballon.value.speed = data.value.wind.speed * 3.6;
-        infoAirballon.value.wind = wintdeg(data.value.wind.deg);
-        infoAirballon.value.rain = data.value.rain;
-    } catch (error) {
-        console.log(error)
-    }
-}
 
 async function flyAirballon() {
     try {
