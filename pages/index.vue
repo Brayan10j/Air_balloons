@@ -25,6 +25,7 @@
                   'icon-image': ['get', 'image-name'], 'icon-size': 0.1, 'icon-rotation-alignment': 'map'
                   , 'icon-allow-overlap': true, 'icon-ignore-placement': true,
                 },
+
               }" />
             </MapboxMap>
           </v-card-text>
@@ -110,7 +111,7 @@ let { data, error } = await supabase
   .from('airballoons')
   .select('*')
 
-userAirBallons.value = data
+userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
 
 setIntervals()
 
@@ -130,7 +131,7 @@ supabase.channel('custom-all-channel')
         let { data, error } = await supabase
           .from('airballoons')
           .select('*')
-        userAirBallons.value = data
+        userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
         setIntervals()
       }
 
@@ -161,6 +162,7 @@ useMapboxBeforeLoad("map", async (map) => {
     },
     properties: {
       'image-name': `/Globos/${a.airballoonId}.png`,
+      'size': a.kilometers * 0.00015
     }
   }));
 

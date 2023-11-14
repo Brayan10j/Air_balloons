@@ -4,24 +4,27 @@
             <v-row justify="center">
                 {{ store.airBalloonSelected.point }}
             </v-row>
-            <v-row justify="center">
-                <v-card>
-                    <v-row class="text-center">
-                        <v-col>
-                            <v-icon>mdi-water</v-icon>
-                            {{ store.InfoWheather.humidity }} %
-                        </v-col>
-                        <v-col>
-                            <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
-                            {{ store.InfoWheather.speed.toFixed(2) }} km/h
-                        </v-col>
-                        <v-col>
-                            <v-icon>mdi-thermometer</v-icon>
-                            {{ store.InfoWheather.temp }} &deg;C
-                            <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
-                        </v-col>
-                    </v-row>
-                </v-card>
+            <v-row justify="center" class="text-center">
+                <v-col>
+                    <v-icon>mdi-water</v-icon>
+                    {{ store.InfoWheather.humidity }} %
+                </v-col>
+                <v-col>
+                    <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
+                    {{ store.InfoWheather.speed.toFixed(2) }} km/h
+                </v-col>
+                <v-col>
+                    <v-icon>mdi-thermometer</v-icon>
+                    {{ store.InfoWheather.temp }} &deg;C
+                    <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
+                </v-col>
+                <v-col>
+                    {{ store.airBalloonSelected.kilometers.toFixed(2) }} KM
+                </v-col>
+                <v-col>
+                    <v-icon size="small" :color="store.airBalloonSelected.state ? 'green' : 'red'">mdi-circle</v-icon>
+                    {{ store.airBalloonSelected.state ? 'Live' : 'Crash' }}
+                </v-col>
             </v-row>
             <v-row>
                 <MapboxMap map-id="mapView" style="position: relative; height: 80vh;" :options="{
@@ -92,6 +95,7 @@
 <script setup>
 
 const store = useMainStore()
+
 
 
 useMapboxBeforeLoad("mapView", async (map) => {

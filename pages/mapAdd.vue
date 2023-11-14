@@ -24,7 +24,7 @@
                             </v-card-text>
 
                             <v-card-actions class="justify-center">
-                                <v-btn rounded variant="outlined" @click="airBalloon = a"> select </v-btn>
+                                <v-btn rounded variant="outlined" @click="store.setInfoAirBalloon(a)"> select </v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-carousel-item>
@@ -32,69 +32,8 @@
 
             </v-col>
             <v-col>
-                <v-card>
-                    <v-card-text>
-                        <v-row justify="center">
-                            {{ markerLocation }}
-                        </v-row>
-                        <v-row justify="center">
-                            <v-card >
-                                <v-row class="text-center">
-                                    <v-col>
-                                        <v-icon>mdi-water</v-icon>
-                                        {{ store.InfoWheather.humidity }} %
-                                    </v-col>
-                                    <v-col>
-                                        <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
-                                        {{ store.InfoWheather.speed.toFixed(2) }} km/h
-                                    </v-col>
-                                    <v-col>
-                                        <v-icon>mdi-thermometer</v-icon>
-                                        {{ store.InfoWheather.temp }} &deg;C
-                                        <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
-                                    </v-col>
-                                </v-row>
-                            </v-card>
-                        </v-row>
-                        <v-row>
-                            <MapboxMap map-id="mapAdd" style="position: relative; height: 60vh;" :options="{
-                                style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
-                                center: [0, 0], // starting position
-                                zoom: 1, // starting zoom
-                                projection: 'globe',
-                                attributionControl: false,
-                                renderWorldCopies: false
-                            }">
-                                <MapboxDefaultMarker marker-id="marker" :options="{
-                                    draggable: true,
-                                }
-                                    " :lnglat="[0, 0]" @dragend="async (m) => {
-        const lngLat = m.getLngLat();
-        markerLocation = [lngLat.lng, lngLat.lat]
-        
-        store.setInfoWheather(await useWeather(markerLocation))
-
-    }
-        ">
-                                    <template #marker>
-                                        <img :src="airBalloon.image" width="50">
-
-                                    </template>
-
-                                </MapboxDefaultMarker>
-
-                            </MapboxMap>
-                        </v-row>
-                        <v-row>
-                            <v-col>
-                                <v-img width="500" class="mx-auto" v-show="weatherLayer !== ''"
-                                    :src="`/Maps/InfoLayers/${weatherLayer}.png`">
-
-                                </v-img>
-                            </v-col>
-
-                        </v-row>
-                    </v-card-text>
+                <v-card>               
+                        <MapAdd :id-map="'mapAdd'"/>
                     <v-card-actions>
                         <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
                             Go
@@ -112,86 +51,12 @@
 const store = useMainStore()
 
 const markerLocation = ref([])
-const weatherLayer = ref("")
-
-const airBalloon = ref({
-    id: "1",
-    image: "/Globos/1.png",
-    conditions: {
-        temp: [0, 50],
-        humidity: [0, 70],
-        windSpeed: [0, 35],
-    },
-})
-
-const weatherLayers = ref([
-    { name: "temperature-layer", icon: "thermometer", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/temperature/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" },
-    { name: "humidity-layer", icon: "water", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/humidity/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" },
-    { name: "wind-layer", icon: "wind-power", image: "https://api.tomorrow.io/v4/map/tile/0/0/0/windSpeed/now.png?apikey=cUSumbZehbp65Zm5Kywfn4JLY762ZgOE" }
-
-])
 
 
 useMapboxBeforeLoad("mapAdd", async (map) => {
     map.on('style.load', () => {
         map.setFog({}) // Set the default atmosphere style
     })
-
-})
-useMapbox("mapAdd", (map) => {
-
-    weatherLayers.value.forEach((l) => {
-        const control = defineMapboxControl((_map) => {
-            let container = document.createElement('div');
-            container.id = l.name;
-            container.className = "mapboxgl-ctrl mapboxgl-ctrl-group text-black ";
-            container.innerHTML = `<button class="mapboxgl-ctrl-icon mdi mdi-${l.icon}" ></button>`;
-            container.addEventListener("contextmenu", (e) => e.preventDefault());
-            container.addEventListener("click", () => {
-                weatherLayers.value.forEach((l2) => {
-                    if (l2.name == l.name) {
-                        if (map.getLayoutProperty(l.name, 'visibility') == 'none') {
-                            weatherLayer.value = l.name
-                            map.setLayoutProperty(l.name, 'visibility', 'visible')
-                        }
-                        else {
-                            weatherLayer.value = ""
-                            map.setLayoutProperty(l.name, 'visibility', 'none')
-                        }
-                    } else {
-                        map.setLayoutProperty(l2.name, 'visibility', 'none')
-                    }
-                })
-            });
-            return container;
-
-
-        }, (map) => { })
-        map.addControl(control, "top-right");
-        map.addLayer({
-            id: l.name,
-            type: 'raster',
-            source: {
-                type: 'raster',
-                tiles: [l.image
-                ],
-                tileSize: 1024,
-                maxzoom: 0,
-                minzoom: 0,
-            },
-            layout: {
-                "visibility": "none"
-            },
-            paint: {
-                //"raster-saturation": 0.2,
-                "raster-opacity": 0.8
-                //"visibility": "none"
-            }
-        });
-    })
-
-
-
 
 })
 
@@ -203,12 +68,12 @@ async function flyAirballon() {
         const { data } = await useFetch('/airballoon', {
             method: "POST", body: {
                 owner: accounts[0],
-                airballoonId: airBalloon.value.id,
-                point: markerLocation.value,
+                airballoonId: store.airBalloon.id,
+                point: store.InfoWheather.location,
                 kilometers: 0,
-                step: infoAirballon.value.speed / 3600,
+                step: store.InfoWheather.speed / 3600,
                 state: true,
-                route: [[markerLocation.value, markerLocation.value]],
+                route: [[store.InfoWheather.location, store.InfoWheather.location]],
             }
         })
         store.setAirBalloon(data);

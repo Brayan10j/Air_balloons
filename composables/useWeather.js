@@ -11,6 +11,7 @@ export default async function (location) {
     // Update the infoAirballon object properties
 
     return {
+      location: location,
       temp: data.value.main.temp,
       humidity: data.value.main.humidity,
       speed: data.value.wind.speed * 3.6,

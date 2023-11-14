@@ -34,16 +34,18 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="  item   in   tournaments  " :key="item.id">
+                <tr borderColor="red" v-for="  item   in   tournaments  " :key="item.id" >
                     <!-- <td>{{ item.id }} </td> -->
-                    <td>{{ item.name }}</td>
+                    <td> <v-icon size="small"
+                            :color="item.participants.length < item.maxParticipants ? 'green' : item.participants.length == item.maxParticipants && item.started ? 'yellow' : 'red'">mdi-circle</v-icon>
+                        {{ item.name }}</td>
                     <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
                     <td>{{ item.value }}</td>
                     <td>
                         <v-btn v-show="item.participants.length < item.maxParticipants" @click="() => {
                             diaglogMapSelect = true
                             selectTournament = item
-                            markerLocation = [0, 0]
+                            store.setInfoAirBalloon(store.airBalloons[Math.floor(Math.random() * 6)])
                         }
                             "> <v-icon>mdi-plus</v-icon> </v-btn>
                         <v-btn v-show="item.participants.length == item.maxParticipants && !item.started"
@@ -83,6 +85,9 @@
                                     Air-balloon
                                 </th>
                                 <th class="text-left">
+                                    Kilometers
+                                </th>
+                                <th class="text-left">
                                     State
                                 </th>
                             </tr>
@@ -91,6 +96,7 @@
                             <tr v-for="  item   in   winners  " :key="item.id">
                                 <td>{{ item.id }} </td>
                                 <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
+                                <td>{{ item.kilometers.toFixed(2) }} </td>
                                 <td>{{ item.state ? 'Live' : 'Crash' }}</td>
 
                             </tr>
@@ -109,6 +115,9 @@
                                     Air-balloon
                                 </th>
                                 <th class="text-left">
+                                    Kilometers
+                                </th>
+                                <th class="text-left">
                                     State
                                 </th>
                             </tr>
@@ -117,6 +126,7 @@
                             <tr v-for="  item   in   losers  " :key="item.id">
                                 <td>{{ item.id }} </td>
                                 <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
+                                <td>{{ item.kilometers.toFixed(2) }} </td>
                                 <td>{{ item.state ? 'Live' : 'Crash' }}</td>
 
                             </tr>
@@ -143,38 +153,14 @@
         </v-dialog>
 
         <v-dialog v-model="diaglogMapSelect">
-            <v-card class="text-center mx-auto" max-width="500">
+            <v-card class="text-center mx-auto" max-width="500" width="70%">
                 <v-card-title>
                     Location Air-balloon
                 </v-card-title>
-                <v-card-subtitle>
-                    {{ markerLocation }}
-                </v-card-subtitle>
 
-                <v-card-text>
-                    <MapboxMap map-id="mapSelect" :options="{
-                        style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
-                        center: [0, 0], // starting position
-                        zoom: 0.2, // starting zoom
-                        projection: 'globe',
-                        attributionControl: false,
-                        renderWorldCopies: false
-                    }
-                        " style="position: relative ; height: 300px; width: 260px;">
+                <MapAdd :id-map="'mapSelect'" />
 
 
-                        <MapboxDefaultMarker marker-id="marker1" :options="{
-                            draggable: true,
-                        }
-                            " :lnglat="[0, 0]" @dragend="(m) => {
-        const lngLat = m.getLngLat();
-        markerLocation = [lngLat.lng, lngLat.lat]
-    }
-        ">
-                        </MapboxDefaultMarker>
-
-                    </MapboxMap>
-                </v-card-text>
                 <v-card-actions class="justify-center">
                     <v-btn @click="addParticipant()" variant="outlined">
                         Select location
@@ -220,7 +206,7 @@ const tournamentsChannel = supabase.channel('custom-all-channel')
 const dialogCreate = ref(false)
 const diaglogMapSelect = ref(false)
 const dialogViewTournament = ref(false)
-const markerLocation = ref([])
+
 const selectTournament = ref({
     name: "",
     participants: [],
@@ -228,7 +214,6 @@ const selectTournament = ref({
     value: 10,
     started: false,
 })
-const airBalloon = ref({})
 
 
 
@@ -238,15 +223,14 @@ async function addParticipant() {
             const accounts = await window.ethereum.request({
                 method: "eth_requestAccounts"
             });
-            airBalloon.value = store.airBalloons[Math.floor(Math.random() * 6)]
             selectTournament.value.participants.push({
                 owner: accounts[0],
-                airballoonId: airBalloon.value.id,
-                point: markerLocation.value,
+                airballoonId: store.airBalloon.id,
+                point: store.InfoWheather.location,
                 kilometers: 0,
                 step: 0,
                 state: true,
-                route: [[markerLocation.value, markerLocation.value]],
+                route: [[store.InfoWheather.location, store.InfoWheather.location]],
                 tournamentID: selectTournament.value.id
             })
             await supabase
@@ -318,6 +302,7 @@ async function viewTournament(tournament) {
 
 async function startTournament(item) {
     try {
+
         await useFetch('/tournaments/startTournament', {
             method: "POST", body: item
         })
