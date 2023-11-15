@@ -5,7 +5,7 @@ export const useMainStore = defineStore("main", {
     count: 1000,
     intervalID: "",
     InfoWheather: {
-      location: [0,0],
+      location: [0, 0],
       temp: 0,
       wind: 0,
       humidity: 0,
@@ -98,10 +98,10 @@ export const useMainStore = defineStore("main", {
         }, 1000);
       }
     },
-    setInfoWheather(item) {    
+    setInfoWheather(item) {
       this.InfoWheather = item;
     },
-    setInfoAirBalloon(item) {    
+    setInfoAirBalloon(item) {
       this.airBalloon = item;
     },
   },

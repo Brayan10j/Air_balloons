@@ -75,7 +75,7 @@ export const useFlyAirBalloon = async (supabase , airBallon) => {
       windSpeed > test.conditions.windSpeed[1]
     ) {
       airBallon.state = false;
-      await supabase.from("airballoons").upsert(airBallon);
+      await supabase.from("airballoons").update(airBallon).eq('id', airBallon.id);
     } else {
       let destination = turf.destination(
         airBallon.point,
@@ -118,13 +118,12 @@ export const useFlyAirBalloon = async (supabase , airBallon) => {
       airBallon.step = windSpeed / 3600;
 
       setTimeout(async () => {
-        await supabase.from("airballoons").upsert(airBallon);
+        await supabase.from("airballoons").update(airBallon).eq('id', airBallon.id);
         useFlyAirBalloon(supabase , airBallon);
       }, steps * 1000);
     }
   } catch (error) {
     console.log(error);
-    await supabase.from("airballoons").upsert(airBallon);
   }
 
   return "bien";

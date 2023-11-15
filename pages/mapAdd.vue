@@ -50,8 +50,6 @@
 
 const store = useMainStore()
 
-const markerLocation = ref([])
-
 
 useMapboxBeforeLoad("mapAdd", async (map) => {
     map.on('style.load', () => {
@@ -76,9 +74,19 @@ async function flyAirballon() {
                 route: [[store.InfoWheather.location, store.InfoWheather.location]],
             }
         })
-        store.setAirBalloon(data);
-        await navigateTo('/mapView')
         alert("Airballoon put to flight successfully")
+        store.setAirBalloon(data);
+        store.setInfoWheather(await useWeather(store.InfoWheather.location))
+        useMapbox("mapView", (map) => {
+            map.jumpTo({
+                center: store.InfoWheather.location,
+                zoom: 3,
+            });
+        })
+        useMapboxMarker("markerView", marker => {
+            marker.setLngLat(store.InfoWheather.location)
+        });
+        await navigateTo('/mapView')
     } catch (error) {
         alert(error.message)
     }

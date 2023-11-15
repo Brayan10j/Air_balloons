@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   });
 
   body.started = true;
-  await supabase.from("tournaments").upsert(body).select();
+  const res  = await supabase.from("tournaments").upsert(body).select();
 
-  return data;
+  return res.data;
 });

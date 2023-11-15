@@ -10,6 +10,7 @@
             </v-btn>
 
         </v-toolbar>
+
         <v-table fixed-header>
             <thead>
                 <tr>
@@ -34,7 +35,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr borderColor="red" v-for="  item   in   tournaments  " :key="item.id" >
+                <tr borderColor="red" v-for="  item   in   tournaments  " :key="item.id">
                     <!-- <td>{{ item.id }} </td> -->
                     <td> <v-icon size="small"
                             :color="item.participants.length < item.maxParticipants ? 'green' : item.participants.length == item.maxParticipants && item.started ? 'yellow' : 'red'">mdi-circle</v-icon>
@@ -48,8 +49,6 @@
                             store.setInfoAirBalloon(store.airBalloons[Math.floor(Math.random() * 6)])
                         }
                             "> <v-icon>mdi-plus</v-icon> </v-btn>
-                        <v-btn v-show="item.participants.length == item.maxParticipants && !item.started"
-                            @click="startTournament(item)"> Start </v-btn>
                         <v-btn v-show="item.started" @click="viewTournament(item)"> View </v-btn>
                     </td>
                     <td>
@@ -58,83 +57,6 @@
                 </tr>
             </tbody>
         </v-table>
-        <v-dialog v-model="dialogViewTournament">
-            <v-card>
-                <v-card-title>
-                    Tournament details </v-card-title>
-                <v-card-subtitle v-show="winnerTournament !== undefined">
-                    FINISHED
-
-                </v-card-subtitle>
-                <v-card-actions class="justify-center" v-show="winnerTournament !== undefined"> <v-btn variant="outlined"
-                        @click="claimTournament()">
-                        claim
-                    </v-btn> </v-card-actions>
-                <v-card-text>
-                    <v-table fixed-header>
-                        <thead>
-
-                            <tr>
-                                Live Airballoons
-                            </tr>
-                            <tr>
-                                <th class="text-left">
-                                    Id
-                                </th>
-                                <th class="text-left">
-                                    Air-balloon
-                                </th>
-                                <th class="text-left">
-                                    Kilometers
-                                </th>
-                                <th class="text-left">
-                                    State
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="  item   in   winners  " :key="item.id">
-                                <td>{{ item.id }} </td>
-                                <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
-                                <td>{{ item.kilometers.toFixed(2) }} </td>
-                                <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-
-                            </tr>
-                        </tbody>
-                    </v-table>
-                    <v-table fixed-header>
-                        <thead>
-                            <tr>
-                                Crash Airballoons
-                            </tr>
-                            <tr>
-                                <th class="text-left">
-                                    Id
-                                </th>
-                                <th class="text-left">
-                                    Air-balloon
-                                </th>
-                                <th class="text-left">
-                                    Kilometers
-                                </th>
-                                <th class="text-left">
-                                    State
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="  item   in   losers  " :key="item.id">
-                                <td>{{ item.id }} </td>
-                                <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
-                                <td>{{ item.kilometers.toFixed(2) }} </td>
-                                <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </v-card-text>
-            </v-card>
-        </v-dialog>
         <v-dialog v-model="dialogCreate">
             <v-card>
                 <v-card-text>
@@ -178,11 +100,8 @@ const store = useMainStore()
 const supabase = useSupabaseClient()
 
 
-
 const tournaments = ref([])
-const winners = ref([])
-const winnerTournament = ref(undefined)
-const losers = ref([])
+
 let { data, error } = await supabase
     .from('tournaments')
     .select('*')
@@ -205,7 +124,7 @@ const tournamentsChannel = supabase.channel('custom-all-channel')
 
 const dialogCreate = ref(false)
 const diaglogMapSelect = ref(false)
-const dialogViewTournament = ref(false)
+
 
 const selectTournament = ref({
     name: "",
@@ -236,6 +155,13 @@ async function addParticipant() {
             await supabase
                 .from('tournaments')
                 .upsert(selectTournament.value)
+
+            if (selectTournament.value.participants.length == selectTournament.value.maxParticipants) {
+                await useFetch('/tournaments/startTournament', {
+                    method: "POST", body: selectTournament.value
+                })
+                alert('Tournament started')
+            }
             diaglogMapSelect.value = false
         }
     } catch (error) {
@@ -256,58 +182,17 @@ async function createTournament() {
 
 }
 
-async function claimTournament() {
-    try {
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-        if (winnerTournament.value.airBalloon.owner == accounts[0]) {
-            await supabase
-                .from('tournaments')
-                .delete()
-                .eq('id', selectTournament.value.id)
-            dialogViewTournament.value = false
-        } else {
-            alert("you are't the winner")
-        }
-    } catch (error) {
-        alert(error)
-    }
 
-}
 
 async function viewTournament(tournament) {
-    try {
-        winnerTournament.value = undefined
-        selectTournament.value = tournament
-        let { data, error } = await supabase
-            .from('airballoons')
-            .select('*')
-            .eq('tournamentID', tournament.id)
 
-        winners.value = data.filter((t) => t.state)
-        if (winners.value.length == 1) {
-            winnerTournament.value = {
-                airBalloon: winners.value[0],
-                state: true
-            }
+    await navigateTo({
+        path: '/tournamentView',
+        query: {
+            id: tournament.id,
         }
-        losers.value = data.filter((t) => !t.state)
-        dialogViewTournament.value = true
-    } catch (error) {
-        alert(error)
-    }
+    },{replace: true})
 
 }
 
-async function startTournament(item) {
-    try {
-
-        await useFetch('/tournaments/startTournament', {
-            method: "POST", body: item
-        })
-    } catch (error) {
-        alert(error.message)
-    }
-}
 </script>

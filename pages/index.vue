@@ -34,52 +34,7 @@
 
       </v-col>
       <v-col md="6">
-        <v-table height="70vh" fixed-header>
-          <thead>
-            <tr>
-              <th class="text-left">
-                Id
-              </th>
-              <th class="text-left">
-                Air-balloon
-              </th>
-              <th class="text-left">
-                Kilometers
-              </th>
-              <th class="text-left">
-                State
-              </th>
-              <th class="text-left">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in userAirBallons" :key="item.id">
-              <td>{{ item.id }} </td>
-              <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
-              <td>{{ item.kilometers.toFixed(4) }}
-              </td>
-              <td>{{ item.state ? 'Live' : 'Crash' }}</td>
-              <td><v-menu>
-                  <template v-slot:activator="{ props }">
-                    <v-btn icon="mdi-dots-vertical" v-bind="props" size="small" variant="flat"></v-btn>
-                  </template>
-
-                  <v-list>
-                    <v-list-item @click="viewAirBalloon(item)">
-                      view
-                    </v-list-item>
-                    <v-list-item v-show="!item.state && item.tournamentID == null" @click="deleteAirBalloon(item)">
-                      delete
-                    </v-list-item>
-                  </v-list>
-                </v-menu><!-- <v-icon @click="seeAirballon(item)" color="blue">mdi-eye</v-icon> 
-            <v-btn v-show="!item.state && item.tournamentID == null" @click="deleteAirBalloon(item)"><v-icon color="red">mdi-delete</v-icon> </v-btn> -->
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+        <TableAll :data="userAirBallons" />
       </v-col>
     </v-row>
   </v-container>
@@ -107,13 +62,19 @@ function setIntervals() {
     }, 1000))
 }
 
-let { data, error } = await supabase
-  .from('airballoons')
-  .select('*')
+async function getAirBalloons() {
+  let { data, error } = await supabase
+    .from('airballoons')
+    .select('*')
 
-userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
+  userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
 
-setIntervals()
+  setIntervals()
+}
+
+await getAirBalloons()
+
+
 
 
 supabase.channel('custom-all-channel')
@@ -128,11 +89,7 @@ supabase.channel('custom-all-channel')
         setIntervals()
 
       } else {
-        let { data, error } = await supabase
-          .from('airballoons')
-          .select('*')
-        userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
-        setIntervals()
+        getAirBalloons()
       }
 
     }
@@ -152,9 +109,7 @@ useMapboxBeforeLoad("map", async (map) => {
     })
   })
 
-
-
-  dataSource.value.features = userAirBallons.value.map(a => ({
+  dataSource.value.features = userAirBallons.value.filter((t) => t.state).map(a => ({
     type: 'Feature',
     geometry: {
       type: 'Point',
@@ -162,61 +117,17 @@ useMapboxBeforeLoad("map", async (map) => {
     },
     properties: {
       'image-name': `/Globos/${a.airballoonId}.png`,
-      'size': a.kilometers * 0.00015
     }
   }));
 
 })
 
+onActivated(() => {
+  setIntervals()
+})
 
-async function deleteAirBalloon(item) {
-  try {
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts"
-    });
-    if (accounts[0] == item.owner) {
-      const supabase = useSupabaseClient()
-      const { error } = await supabase
-        .from('airballoons')
-        .delete()
-        .eq('id', item.id)
-    } else {
-      alert("You aren't the owner")
-    }
-  } catch (error) {
-    alert(error)
-  }
-
-}
-
-
-async function viewAirBalloon(item) {
-  try {
-    const fechaMenosUnaHora = new Date();
-    fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-    if (new Date(item.updated_at) < fechaMenosUnaHora && item.state) {
-      await useFetch('/airballoon', {
-        method: "POST", body: item
-      })
-    }
-    store.setAirBalloon(item);
-    store.setInfoWheather(await useWeather(item.point))
-    useMapbox("mapView", (map) => {
-      map.jumpTo({
-        center: item.point,
-        zoom: 3,
-      });
-    })
-    useMapboxMarker("markerView", marker => {
-      marker.setLngLat(item.point)
-    });
-    await navigateTo('/mapView')
-
-  } catch (error) {
-    alert(error)
-  }
-
-}
-
+onDeactivated(() => {
+  intervals.value.forEach(interval => clearInterval(interval));
+})
 
 </script>
