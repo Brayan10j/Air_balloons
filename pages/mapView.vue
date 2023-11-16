@@ -19,7 +19,7 @@
                     <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
                 </v-col>
                 <v-col>
-                    {{ store.airBalloonSelected.kilometers.toFixed(2) }} KM
+                    {{ store.airBalloonSelected.kilometers.toFixed(4) }} KM
                 </v-col>
                 <v-col>
                     <v-icon size="small" :color="store.airBalloonSelected.state ? 'green' : 'red'">mdi-circle</v-icon>

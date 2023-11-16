@@ -147,7 +147,7 @@ async function addParticipant() {
                 airballoonId: store.airBalloon.id,
                 point: store.InfoWheather.location,
                 kilometers: 0,
-                step: 0,
+                step: store.InfoWheather.speed / 3600,
                 state: true,
                 route: [[store.InfoWheather.location, store.InfoWheather.location]],
                 tournamentID: selectTournament.value.id

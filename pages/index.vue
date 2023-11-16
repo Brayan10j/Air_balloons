@@ -66,6 +66,7 @@ async function getAirBalloons() {
   let { data, error } = await supabase
     .from('airballoons')
     .select('*')
+    .is('tournamentID', null)
 
   userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
 
@@ -73,7 +74,6 @@ async function getAirBalloons() {
 }
 
 await getAirBalloons()
-
 
 
 
@@ -89,7 +89,7 @@ supabase.channel('custom-all-channel')
         setIntervals()
 
       } else {
-        getAirBalloons()
+        await getAirBalloons()
       }
 
     }
@@ -122,8 +122,8 @@ useMapboxBeforeLoad("map", async (map) => {
 
 })
 
-onActivated(() => {
-  setIntervals()
+onActivated(async () => {
+  await getAirBalloons()
 })
 
 onDeactivated(() => {

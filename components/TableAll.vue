@@ -84,8 +84,9 @@ async function viewAirBalloon(item) {
     try {
         const fechaMenosUnaHora = new Date();
         fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-        if (new Date(item.updated_at) < fechaMenosUnaHora && item.state) {
-            await useFetch('/airballoon', {
+        if (new Date(item.updated_at) < fechaMenosUnaHora && item.state && item.tournamentID == null && item.updated_at !== null) {
+            console.log("reanudate")
+            await useFetch('/airBalloons/reanudate', {
                 method: "POST", body: item
             })
         }
