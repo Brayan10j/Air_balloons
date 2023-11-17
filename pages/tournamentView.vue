@@ -107,7 +107,7 @@ async function getAirBalloons() {
             state: true
         }
     } else {
-        const fechaMenosUnaHora = new Date();
+        /* const fechaMenosUnaHora = new Date();
         fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
         winners.value.forEach(async (a) => {
 
@@ -117,7 +117,7 @@ async function getAirBalloons() {
                     method: "POST", body: a
                 })
             }
-        })
+        }) */
     }
     losers.value = data.filter((t) => !t.state)
 

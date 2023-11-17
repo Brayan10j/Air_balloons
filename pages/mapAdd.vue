@@ -2,38 +2,51 @@
     <v-container>
         <v-row>
             <v-col>
-                <v-carousel hide-delimiters>
-                    <v-carousel-item v-for="(a, i) in store.airBalloons" :key="i">
-                        <v-card class="text-center">
+                <v-card min-width="300">
+                    <v-card-text>
+                        <v-carousel hide-delimiters height="400">
+                            <v-carousel-item v-for="(a, i) in store.airBalloons" :key="i">
+                                <v-card class="text-center" flat>
+                                    <v-card-title>
+                                        <v-img width="150" class="mx-auto" :src="a.image" contain></v-img>
+                                    </v-card-title>
+                                    <v-card-subtitle> Conditions </v-card-subtitle>
+                                    <v-card-text>
+                                        <v-chip-group class="justify-center">
+                                            <v-chip>
+                                                <v-icon>mdi-thermometer</v-icon>
+                                                {{ a.conditions.temp[0] }} to {{
+                                                    a.conditions.temp[1] }} &deg;C
+                                            </v-chip>
 
-                            <v-card-title> <v-img width="200" class="mx-auto" :src="a.image"></v-img> </v-card-title>
+                                            <v-chip>
+                                                <v-icon>mdi-water</v-icon>
+                                                {{ a.conditions.humidity[0] }} to {{
+                                                    a.conditions.humidity[1] }} %
+                                            </v-chip>
+                                            <v-chip>
+                                                <v-icon>mdi-speedometer</v-icon>
+                                                {{ a.conditions.windSpeed[0] }} to {{
+                                                    a.conditions.windSpeed[1] }} km/h
+                                            </v-chip>
+                                        </v-chip-group>
+                                    </v-card-text>
 
-                            <v-card-subtitle> Conditions </v-card-subtitle>
+                                    <v-card-actions class="justify-center">
+                                        <v-btn rounded variant="outlined" @click="store.setInfoAirBalloon(a)"> select
+                                        </v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-carousel-item>
+                        </v-carousel>
 
-                            <v-card-text>
-                                <v-icon>mdi-thermometer</v-icon> : {{ a.conditions.temp[0] }}&deg;C to {{
-                                    a.conditions.temp[1] }}&deg;C
-                            </v-card-text>
-                            <v-card-text>
-                                <v-icon>mdi-water</v-icon> : {{ a.conditions.humidity[0] }}% to {{
-                                    a.conditions.humidity[1] }}%
-                            </v-card-text>
-                            <v-card-text>
-                                <v-icon>mdi-speedometer</v-icon> : {{ a.conditions.windSpeed[0] }}km/h to {{
-                                    a.conditions.windSpeed[1] }}km/h
-                            </v-card-text>
-
-                            <v-card-actions class="justify-center">
-                                <v-btn rounded variant="outlined" @click="store.setInfoAirBalloon(a)"> select </v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-carousel-item>
-                </v-carousel>
+                    </v-card-text>
+                </v-card>
 
             </v-col>
-            <v-col>
-                <v-card>               
-                        <MapAdd :id-map="'mapAdd'"/>
+            <v-col xs="12" md="6">
+                <v-card>
+                    <MapAdd :id-map="'mapAdd'" />
                     <v-card-actions>
                         <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
                             Go
