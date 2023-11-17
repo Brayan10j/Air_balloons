@@ -1,5 +1,5 @@
 <template>
-    <v-table fixed-header >
+    <v-table fixed-header>
         <thead>
             <tr>
                 <th class="text-left">
@@ -54,7 +54,7 @@ const store = useMainStore()
 const props = defineProps(["data"])
 
 
-const airBalloons = computed(() => props.data) 
+const airBalloons = computed(() => props.data)
 
 
 /* const intervals = ref([])
@@ -84,7 +84,8 @@ async function viewAirBalloon(item) {
     try {
         const fechaMenosUnaHora = new Date();
         fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-        if (new Date(item.updated_at) < fechaMenosUnaHora && item.state && item.tournamentID == null && item.updated_at !== null) {
+        // reanudate symultaneus tournament item.tournamentID == null
+        if (new Date(item.updated_at) < fechaMenosUnaHora && item.state && item.updated_at !== null) {
             console.log("reanudate")
             await useFetch('/airBalloons/reanudate', {
                 method: "POST", body: item
