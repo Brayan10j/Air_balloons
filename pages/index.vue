@@ -69,6 +69,16 @@ async function getAirBalloons() {
     .is('tournamentID', null)
 
   userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
+  dataSource.value.features = userAirBallons.value.filter((t) => t.state).map(a => ({
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: a.point
+    },
+    properties: {
+      'image-name': `/Globos/${a.airballoonId}.png`,
+    }
+  }));
 
   setIntervals()
 }
@@ -108,17 +118,6 @@ useMapboxBeforeLoad("map", async (map) => {
       map.addImage(`/Globos/${i + 1}.png`, image)
     })
   })
-
-  dataSource.value.features = userAirBallons.value.filter((t) => t.state).map(a => ({
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: a.point
-    },
-    properties: {
-      'image-name': `/Globos/${a.airballoonId}.png`,
-    }
-  }));
 
 })
 

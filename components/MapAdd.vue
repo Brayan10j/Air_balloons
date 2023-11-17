@@ -24,7 +24,7 @@
                 </v-card>
             </v-row>
             <v-row>
-                <MapboxMap :map-id="idMap" style="position: relative; height: 50vh;" :options="{
+                <MapboxMap :map-id="idMap" style="position: relative; height: 40vh;" :options="{
                     style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
                     center: [0, 0], // starting position
                     zoom: 1, // starting zoom
@@ -52,8 +52,7 @@
             </v-row>
             <v-row>
                 <v-col>
-                    <v-img width="500" class="mx-auto" v-show="weatherLayer !== ''"
-                        :src="`/Maps/InfoLayers/${weatherLayer}.png`">
+                    <v-img class="mx-auto" v-show="weatherLayer !== ''" :src="`/Maps/InfoLayers/${weatherLayer}.png`">
 
                     </v-img>
                 </v-col>
@@ -88,55 +87,55 @@ useMapboxBeforeLoad(props.idMap, async (map) => {
 
 useMapbox(props.idMap, (map) => {
 
-weatherLayers.value.forEach((l) => {
-    const control = defineMapboxControl((_map) => {
-        let container = document.createElement('div');
-        container.id = l.name;
-        container.className = "mapboxgl-ctrl mapboxgl-ctrl-group text-black ";
-        container.innerHTML = `<button class="mapboxgl-ctrl-icon mdi mdi-${l.icon}" ></button>`;
-        container.addEventListener("contextmenu", (e) => e.preventDefault());
-        container.addEventListener("click", () => {
-            weatherLayers.value.forEach((l2) => {
-                if (l2.name == l.name) {
-                    if (map.getLayoutProperty(l.name, 'visibility') == 'none') {
-                        weatherLayer.value = l.name
-                        map.setLayoutProperty(l.name, 'visibility', 'visible')
+    weatherLayers.value.forEach((l) => {
+        const control = defineMapboxControl((_map) => {
+            let container = document.createElement('div');
+            container.id = l.name;
+            container.className = "mapboxgl-ctrl mapboxgl-ctrl-group text-black ";
+            container.innerHTML = `<button class="mapboxgl-ctrl-icon mdi mdi-${l.icon}" ></button>`;
+            container.addEventListener("contextmenu", (e) => e.preventDefault());
+            container.addEventListener("click", () => {
+                weatherLayers.value.forEach((l2) => {
+                    if (l2.name == l.name) {
+                        if (map.getLayoutProperty(l.name, 'visibility') == 'none') {
+                            weatherLayer.value = l.name
+                            map.setLayoutProperty(l.name, 'visibility', 'visible')
+                        }
+                        else {
+                            weatherLayer.value = ""
+                            map.setLayoutProperty(l.name, 'visibility', 'none')
+                        }
+                    } else {
+                        map.setLayoutProperty(l2.name, 'visibility', 'none')
                     }
-                    else {
-                        weatherLayer.value = ""
-                        map.setLayoutProperty(l.name, 'visibility', 'none')
-                    }
-                } else {
-                    map.setLayoutProperty(l2.name, 'visibility', 'none')
-                }
-            })
-        });
-        return container;
+                })
+            });
+            return container;
 
 
-    }, (map) => { })
-    map.addControl(control, "top-right");
-    map.addLayer({
-        id: l.name,
-        type: 'raster',
-        source: {
+        }, (map) => { })
+        map.addControl(control, "top-right");
+        map.addLayer({
+            id: l.name,
             type: 'raster',
-            tiles: [l.image
-            ],
-            tileSize: 1024,
-            maxzoom: 0,
-            minzoom: 0,
-        },
-        layout: {
-            "visibility": "none"
-        },
-        paint: {
-            //"raster-saturation": 0.2,
-            "raster-opacity": 0.8
-            //"visibility": "none"
-        }
-    });
-})
+            source: {
+                type: 'raster',
+                tiles: [l.image
+                ],
+                tileSize: 1024,
+                maxzoom: 0,
+                minzoom: 0,
+            },
+            layout: {
+                "visibility": "none"
+            },
+            paint: {
+                //"raster-saturation": 0.2,
+                "raster-opacity": 0.8
+                //"visibility": "none"
+            }
+        });
+    })
 
 
 

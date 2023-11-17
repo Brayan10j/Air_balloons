@@ -92,10 +92,10 @@ export const useMainStore = defineStore("main", {
     setAirBalloon(item) {
       clearInterval(this.intervalID);
       this.airBalloonSelected = item;
+      this.airBalloon = this.airBalloons[parseInt(item.airballoonId) - 1];
       if (this.airBalloonSelected.state) {
-        console.log("entra");
         this.intervalID = setInterval(() => {
-          this.airBalloonSelected.kilometers += this.airBalloonSelected.step;         
+          this.airBalloonSelected.kilometers += this.airBalloonSelected.step;
         }, 1000);
       }
     },
