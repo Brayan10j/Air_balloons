@@ -25,7 +25,7 @@
                 <td><v-avatar :image="`/Globos/${item.airballoonId}.png`"></v-avatar></td>
                 <td>{{ item.kilometers.toFixed(4) }}
                 </td>
-                <td>{{ item.state ? 'Live' : 'Crash' }}</td>
+                <td>{{ item.state}}</td>
                 <td><v-menu>
                         <template v-slot:activator="{ props }">
                             <v-btn icon="mdi-dots-vertical" v-bind="props" size="small" variant="flat"></v-btn>
@@ -35,7 +35,7 @@
                             <v-list-item @click="viewAirBalloon(item)">
                                 view
                             </v-list-item>
-                            <v-list-item v-show="!item.state && item.tournamentID == null" @click="deleteAirBalloon(item)">
+                            <v-list-item v-show="item.state == 'COLLAPSE' && item.tournamentID == null" @click="deleteAirBalloon(item)">
                                 delete
                             </v-list-item>
                         </v-list>
@@ -82,17 +82,9 @@ onMounted(() => {
  */
 async function viewAirBalloon(item) {
     try {
-        const fechaMenosUnaHora = new Date();
-        fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-        // reanudate symultaneus tournament item.tournamentID == null
-        if (new Date(item.updated_at) < fechaMenosUnaHora && item.state && item.updated_at !== null) {
-            console.log("reanudate")
-            await useFetch('/airBalloons/reanudate', {
-                method: "POST", body: item
-            })
-        }
+        const weather = await useWeather(item.point)
+        store.setInfoWheather(weather)
         store.setAirBalloon(item);
-        store.setInfoWheather(await useWeather(item.point))
         useMapbox("mapView", (map) => {
             map.jumpTo({
                 center: item.point,

@@ -58,7 +58,7 @@ const airBallons = [
   },
 ];
 
-export const useFlyAirBalloon = async (supabase , airBallon) => {
+export const useFlyAirBalloon = async (supabase, airBallon) => {
   try {
     let infoWeather = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${airBallon.point[1]}&lon=${airBallon.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
@@ -74,8 +74,11 @@ export const useFlyAirBalloon = async (supabase , airBallon) => {
       windSpeed < test.conditions.windSpeed[0] ||
       windSpeed > test.conditions.windSpeed[1]
     ) {
-      airBallon.state = false;
-      await supabase.from("airballoons").update(airBallon).eq('id', airBallon.id);
+      airBallon.state = "COLLAPSE";
+      await supabase
+        .from("airballoons")
+        .update(airBallon)
+        .eq("id", airBallon.id);
     } else {
       let destination = turf.destination(
         airBallon.point,
@@ -118,13 +121,18 @@ export const useFlyAirBalloon = async (supabase , airBallon) => {
       airBallon.step = windSpeed / 3600;
 
       setTimeout(async () => {
-        await supabase.from("airballoons").update(airBallon).eq('id', airBallon.id);
-        useFlyAirBalloon(supabase , airBallon);
+        await supabase
+          .from("airballoons")
+          .update(airBallon)
+          .eq("id", airBallon.id);
+        useFlyAirBalloon(supabase, airBallon);
       }, steps * 1000);
     }
   } catch (error) {
     console.log(error);
+    airBallon.state = "STOPPED";
+    await supabase.from("airballoons").update(airBallon).eq("id", airBallon.id);
   }
 
   return "bien";
-}
+};

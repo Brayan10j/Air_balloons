@@ -2,12 +2,12 @@
     <v-container>
         <v-toolbar title="Application">
             <v-spacer></v-spacer>
-            <v-btn @click="() => {
+           <!--  <v-btn @click="() => {
                 selectTournament = { name: '', participants: [], maxParticipants: 10, value: 10, started: false };
                 dialogCreate = true;
             }">
                 Create
-            </v-btn>
+            </v-btn> -->
 
         </v-toolbar>
 
@@ -148,7 +148,7 @@ async function addParticipant() {
                 point: store.InfoWheather.location,
                 kilometers: 0,
                 step: store.InfoWheather.speed / 3600,
-                state: true,
+                state: 'LIVE',
                 route: [[store.InfoWheather.location, store.InfoWheather.location]],
                 tournamentID: selectTournament.value.id
             })

@@ -1,8 +1,8 @@
 <template>
   <v-container>
     <v-row>
-      <v-col md="6">
-        <v-card>
+      <v-col >
+        <v-card min-width="300">
           <v-card-text>
             <MapboxMap map-id="map" style="position: relative; height: 70vh;" :options="{
               style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
@@ -33,7 +33,7 @@
         </v-card>
 
       </v-col>
-      <v-col md="6">
+      <v-col >
         <TableAll :data="userAirBallons" />
       </v-col>
     </v-row>
@@ -57,7 +57,7 @@ const intervals = ref([])
 function setIntervals() {
   intervals.value.forEach(interval => clearInterval(interval));
   intervals.value = userAirBallons.value
-    .filter(a1 => a1.state).map(a => setInterval(() => {
+    .filter(a1 => a1.state == 'LIVE').map(a => setInterval(() => {
       a.kilometers += a.step
     }, 1000))
 }
@@ -67,9 +67,12 @@ async function getAirBalloons() {
     .from('airballoons')
     .select('*')
     .is('tournamentID', null)
+    .not('state', 'is', null)
+    .not('state', 'eq', "STOPPED")
+    //.not()
 
   userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
-  dataSource.value.features = userAirBallons.value.filter((t) => t.state).map(a => ({
+  dataSource.value.features = userAirBallons.value.filter((t) => t.state == 'LIVE').map(a => ({
     type: 'Feature',
     geometry: {
       type: 'Point',
@@ -96,6 +99,7 @@ supabase.channel('custom-all-channel')
         userAirBallons.value = userAirBallons.value.map(objeto =>
           objeto.id === payload.new.id ? payload.new : objeto
         );
+        console.log(payload)
         setIntervals()
 
       } else {
@@ -123,10 +127,10 @@ useMapboxBeforeLoad("map", async (map) => {
 
 onActivated(async () => {
   await getAirBalloons()
-})
+}) 
 
-onDeactivated(() => {
+/* onDeactivated(() => {
   intervals.value.forEach(interval => clearInterval(interval));
-})
+}) */
 
 </script>

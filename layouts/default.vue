@@ -21,7 +21,8 @@
     </v-main>
     <v-bottom-navigation grow>
       <v-btn to="/"> <v-icon>mdi-home</v-icon> </v-btn>
-      <v-btn to="/mapAdd"> <v-icon>mdi-plus</v-icon> </v-btn>
+      <v-btn to="/store"> <v-icon>mdi-store</v-icon> </v-btn>
+      <v-btn to="/mapAdd"> <v-icon>mdi-airballoon-outline</v-icon> </v-btn>
       <v-btn to="/tournaments"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
     </v-bottom-navigation>
   </v-app>

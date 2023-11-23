@@ -15,7 +15,9 @@
     "mapbox-gl": "^2.15.0",
     "nuxt": "^3.7.4",
     "nuxt-mapbox": "1.5.2",
-    "nuxt3-leaflet": "^1.0.12"
+    "nuxt-vuetify": "^1.0.1",
+    "nuxt3-leaflet": "^1.0.12",
+    "vuetify-nuxt-module": "^0.6.7"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.1.2",
@@ -23,7 +25,6 @@
     "@turf/turf": "^6.5.0",
     "axios": "^1.5.1",
     "h3-js": "^4.1.0",
-    "nuxt-vuetify": "^1.0.1",
     "pinia": "^2.1.7"
   }
 }

@@ -5,10 +5,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const { data, error } = await supabase
     .from("airballoons")
-    .upsert(body)
+    .update(body)
+    .eq("id", body.id)
     .select();
   if (error) console.log(error);
-
-  useFlyAirBalloon( supabase , data[0])
+  useFlyAirBalloon(supabase, data[0]);
   return data[0];
 });

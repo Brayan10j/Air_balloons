@@ -4,7 +4,7 @@
         <v-row>
             <v-col>
                 <v-row>
-                    <v-col cols="12">
+                    <v-col>
                         <v-card>
                             <v-card-title>
                                 Terrain weather
@@ -26,8 +26,8 @@
 
                                             {{ store.InfoWheather.speed.toFixed(2) }} km/h
                                         </v-chip>
-                                        
-                                        
+
+
                                     </v-col>
                                     <v-col>
                                         <v-icon>mdi-thermometer</v-icon>
@@ -36,7 +36,7 @@
 
                                             {{ store.InfoWheather.temp }} &deg;C
                                         </v-chip>
-                                        
+
                                         <!--  <v-icon v-show="(infoAirballon.rain /= undefined)">mdi-weather-pouring</v-icon> -->
                                     </v-col>
                                 </v-row>
@@ -50,7 +50,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row justify="center" class="text-center">
-                                   <!--  <v-col>
+                                    <!--  <v-col>
 
                                         <v-card class="text-center">
                                             <v-card-title> <v-img width="200" class="mx-auto"
@@ -81,8 +81,8 @@
                                     </v-col>
                                     <v-col>
                                         <v-icon size="small"
-                                            :color="store.airBalloonSelected.state ? 'green' : 'red'">mdi-circle</v-icon>
-                                        {{ store.airBalloonSelected.state ? 'Live' : 'Crash' }}
+                                            :color="store.airBalloonSelected.state == 'LIVE' ? 'green' : store.airBalloonSelected.state == 'STOPPED' ? 'yellow' : 'red'">mdi-circle</v-icon>
+                                        {{ store.airBalloonSelected.state }}
                                     </v-col>
                                 </v-row>
                             </v-card-text>
@@ -91,7 +91,7 @@
                 </v-row>
             </v-col>
             <v-col>
-                <v-card>
+                <v-card min-width="300">
                     <v-card-text>
                         <MapboxMap map-id="mapView" style="position: relative; height: 70vh;" :options="{
                             style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
@@ -165,20 +165,24 @@
 
 const store = useMainStore()
 
-
-
 useMapboxBeforeLoad("mapView", async (map) => {
     map.on('style.load', () => {
         map.setFog({}) // Set the default atmosphere style
     })
-    /*  map.loadImage(`/Globos/1.png`, (error, image) => {
-         if (error) {
-             console.log(error)
-         }
-         map.addImage(`airBalloon`, image)
-     }
-     )  */
+})
 
+onActivated(async () => {
+    const fechaMenosUnaHora = new Date();
+    fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
+    // reanudate symultaneus tournament item.tournamentID == null
+    if (new Date(store.airBalloonSelected.updated_at) < fechaMenosUnaHora  && store.airBalloonSelected.state == 'LIVE') {
+        console.log("reanudate")
+        $fetch('/reanudate', {
+            method: 'POST',
+            body: store.airBalloonSelected
+        })
+
+    }
 })
 
 </script>
