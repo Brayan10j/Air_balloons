@@ -1,13 +1,17 @@
 <template>
     <v-container>
         <v-row>
+            <v-btn rounded class="mx-auto" variant="elevated" color="primary" @click="mintAirBalloon()"> MINT
+            </v-btn>
+        </v-row>
+        <v-row>
             <v-col v-for="(a, i) in store.airBalloons" :key="i">
-                <v-card class="mx-auto text-center"  width="200">
+                <v-card class="mx-auto text-center" width="200">
                     <v-card-title>
                         <v-img width="100" class="mx-auto" :src="a.image" contain></v-img>
                     </v-card-title>
                     <v-card-subtitle> Conditions </v-card-subtitle>
-                    <v-card-text>
+                    <v-card-text class="text-center justify-center">
                         <v-chip-group class="justify-center">
                             <v-chip>
                                 <v-icon>mdi-thermometer</v-icon>
@@ -27,33 +31,32 @@
                             </v-chip>
                         </v-chip-group>
                     </v-card-text>
-
-                    <v-card-actions class="justify-center">
-                        <v-btn rounded variant="outlined" @click="mintAirBalloon(a)"> select
-                        </v-btn>
-                    </v-card-actions>
                 </v-card>
             </v-col>
+
         </v-row>
+
     </v-container>
 </template>
 
 <script setup>
 
 const store = useMainStore()
+const supabase = useSupabaseClient()
 
 
-async function mintAirBalloon(item) {
+async function mintAirBalloon() {
     try {
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
-        const supabase = useSupabaseClient()
+        
+        const airBalloon =  store.airBalloons[Math.floor(Math.random() * 6)]
         const { data, error } = await supabase
             .from("airballoons")
             .insert({
                 owner: accounts[0],
-                airballoonId: item.id,
+                airballoonId: airBalloon.id,
             })
             .select()
         alert("Airballoon minted")

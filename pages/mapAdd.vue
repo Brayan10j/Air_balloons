@@ -111,6 +111,12 @@ const airBalloons = ref([])
 async function selectAirBalloon(item) {
     airBalloon.value = item
     store.setInfoAirBalloon(item.info)
+    useMapbox("mapAdd", (map) => {
+        const { lng, lat } = map.getCenter();
+        useMapboxMarker("marker",  (marker) => {
+            marker.setLngLat([lng, lat])
+        })
+    })
 }
 
 async function getAirBalloons() {
@@ -133,7 +139,7 @@ async function getAirBalloons() {
         }
 
     } catch (error) {
-        alert(error)
+        alert(error.message)
     }
 
 }

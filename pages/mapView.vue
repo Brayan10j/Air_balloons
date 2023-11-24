@@ -1,10 +1,9 @@
 <template>
     <v-container>
-
         <v-row>
-            <v-col>
+            <v-col md="6">
                 <v-row>
-                    <v-col>
+                    <v-col cols="12">
                         <v-card>
                             <v-card-title>
                                 Terrain weather
@@ -14,7 +13,7 @@
                                     <v-col>
                                         <v-icon>mdi-water</v-icon>
                                         <v-chip
-                                            :color="store.InfoWheather.humidity <= store.airBalloon.conditions.humidity[0] + 5 || store.InfoWheather.humidity >= store.airBalloon.conditions.humidity[1] - 5 ? 'red' : 'green'">
+                                            :color="store.InfoWheather.humidity <= store.airBalloon.conditions.humidity[0] + 2 || store.InfoWheather.humidity >= store.airBalloon.conditions.humidity[1] - 2 ? 'red' : 'green'">
 
                                             {{ store.InfoWheather.humidity }} %
                                         </v-chip>
@@ -22,7 +21,7 @@
                                     <v-col>
                                         <v-icon>mdi-arrow-up-bold mdi-rotate-{{ store.InfoWheather.wind }}</v-icon>
                                         <v-chip
-                                            :color="store.InfoWheather.speed <= store.airBalloon.conditions.windSpeed[0] + 5 || store.InfoWheather.speed >= store.airBalloon.conditions.windSpeed[1] - 5 ? 'red' : 'green'">
+                                            :color="store.InfoWheather.speed <= store.airBalloon.conditions.windSpeed[0] + 2 || store.InfoWheather.speed >= store.airBalloon.conditions.windSpeed[1] - 2 ? 'red' : 'green'">
 
                                             {{ store.InfoWheather.speed.toFixed(2) }} km/h
                                         </v-chip>
@@ -32,7 +31,7 @@
                                     <v-col>
                                         <v-icon>mdi-thermometer</v-icon>
                                         <v-chip
-                                            :color="store.InfoWheather.temp <= store.airBalloon.conditions.temp[0] + 5 || store.InfoWheather.temp >= store.airBalloon.conditions.temp[1] - 5 ? 'red' : 'green'">
+                                            :color="store.InfoWheather.temp <= store.airBalloon.conditions.temp[0] + 2 || store.InfoWheather.temp >= store.airBalloon.conditions.temp[1] - 2 ? 'red' : 'green'">
 
                                             {{ store.InfoWheather.temp }} &deg;C
                                         </v-chip>
@@ -43,39 +42,17 @@
                             </v-card-text>
                         </v-card>
                     </v-col>
-                    <v-col>
+                    <v-col cols="12">
                         <v-card>
                             <v-card-title>
                                 Info air-balloon
+
                             </v-card-title>
                             <v-card-text>
                                 <v-row justify="center" class="text-center">
-                                    <!--  <v-col>
+                                    <v-col v-show="store.airBalloonSelected.tournamentID !== null">
 
-                                        <v-card class="text-center">
-                                            <v-card-title> <v-img width="200" class="mx-auto"
-                                                    :src="store.airBalloon.image"></v-img>
-                                            </v-card-title>
-
-                                            <v-card-subtitle> Conditions </v-card-subtitle>
-
-                                            <v-card-text>
-                                                <v-icon>mdi-thermometer</v-icon> : {{ store.airBalloon.conditions.temp[0]
-                                                }}&deg;C to {{ store.airBalloon.conditions.temp[1] }}&deg;C
-
-                                                <v-icon>mdi-water</v-icon> : {{ store.airBalloon.conditions.humidity[0] }}%
-                                                to {{
-                                                    store.airBalloon.conditions.humidity[1] }}%
-
-                                                <v-icon>mdi-speedometer</v-icon> : {{
-                                                    store.airBalloon.conditions.windSpeed[0] }}km/h to
-                                                {{ store.airBalloon.conditions.windSpeed[1] }}km/h
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col> -->
-                                    <!-- <v-col>
-                                        {{ store.airBalloonSelected.point }}
-                                    </v-col> -->
+                                    </v-col>
                                     <v-col>
                                         {{ store.airBalloonSelected.kilometers.toFixed(4) }} KM
                                     </v-col>
@@ -87,6 +64,18 @@
                                 </v-row>
                             </v-card-text>
                         </v-card>
+                    </v-col>
+                    <v-col cols="12" v-show="store.airBalloonSelected.tournamentID !== null" >
+                        <v-btn block  @click="async () => {
+                            await navigateTo({
+                                path: '/tournamentView',
+                                query: {
+                                    id: store.airBalloonSelected.tournamentID,
+                                }
+                            }, { replace: true })
+                        }">
+                            Tournament details
+                        </v-btn>
                     </v-col>
                 </v-row>
             </v-col>
@@ -175,7 +164,7 @@ onActivated(async () => {
     const fechaMenosUnaHora = new Date();
     fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
     // reanudate symultaneus tournament item.tournamentID == null
-    if (new Date(store.airBalloonSelected.updated_at) < fechaMenosUnaHora  && store.airBalloonSelected.state == 'LIVE') {
+    if (new Date(store.airBalloonSelected.updated_at) < fechaMenosUnaHora && store.airBalloonSelected.state == 'LIVE') {
         console.log("reanudate")
         $fetch('/reanudate', {
             method: 'POST',

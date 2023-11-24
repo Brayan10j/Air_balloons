@@ -30,6 +30,16 @@
                 <v-card>
                     <v-card-title>
                         Tournament details </v-card-title>
+                    <v-card-text>
+                        <v-toolbar> <v-toolbar-title>{{ tournament.name }} </v-toolbar-title> <v-spacer> </v-spacer>
+                            Reward :
+                            <v-chip class="mr-2" color="green"> {{
+                                tournament.value *
+                                tournament.participants.length }}</v-chip> </v-toolbar>
+                    </v-card-text>
+
+
+
                     <v-card-subtitle v-show="winnerTournament !== undefined">
                         FINISHED
 
@@ -41,7 +51,7 @@
                     <v-card-text>
                         Live Airballoons
                         <TableAll :data="winners" />
-                        Crash Airballoons
+                        Collapse Airballoons
                         <component :is="TableAll" :data="losers" />
 
                     </v-card-text>
@@ -70,6 +80,9 @@ const winners = ref([])
 const winnerTournament = ref(undefined)
 const losers = ref([])
 const intervals = ref([])
+const tournament = ref({
+    participants : []
+})
 
 
 
@@ -83,10 +96,19 @@ function setIntervals() {
 async function getAirBalloons() {
     let { data, error } = await supabase
         .from('airballoons')
-        .select('*')
+        .select(`*`)
         .eq('tournamentID', route.query.id)
 
-    winners.value = data.filter((t) => t.state)
+    let { data: value } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('id', route.query.id)
+
+
+
+    tournament.value = value[0]
+
+    winners.value = data.filter((t) => t.state == "LIVE")
     dataSource.value.features = winners.value.map(a => ({
         type: 'Feature',
         geometry: {
@@ -98,7 +120,7 @@ async function getAirBalloons() {
         }
     }));
 
-    useMapbox("mapT",(map)=>{
+    useMapbox("mapT", (map) => {
         map.getSource('allPoints').setData(dataSource.value)
     })
     if (winners.value.length == 1) {
@@ -106,20 +128,8 @@ async function getAirBalloons() {
             airBalloon: winners.value[0],
             state: true
         }
-    } else {
-        /* const fechaMenosUnaHora = new Date();
-        fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
-        winners.value.forEach(async (a) => {
-
-            if (new Date(a.updated_at) < fechaMenosUnaHora && a.updated_at !== null) {
-                console.log("reanudate")
-                await useFetch('/airBalloons/reanudate', {
-                    method: "POST", body: a
-                })
-            }
-        }) */
     }
-    losers.value = data.filter((t) => !t.state)
+    losers.value = data.filter((t) => t.state == "COLLAPSE")
 
     setIntervals()
 }

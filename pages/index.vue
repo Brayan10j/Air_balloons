@@ -99,7 +99,6 @@ supabase.channel('custom-all-channel')
         userAirBallons.value = userAirBallons.value.map(objeto =>
           objeto.id === payload.new.id ? payload.new : objeto
         );
-        console.log(payload)
         setIntervals()
 
       } else {

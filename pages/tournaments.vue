@@ -2,12 +2,12 @@
     <v-container>
         <v-toolbar title="Application">
             <v-spacer></v-spacer>
-           <!--  <v-btn @click="() => {
+            <v-btn @click="() => {
                 selectTournament = { name: '', participants: [], maxParticipants: 10, value: 10, started: false };
                 dialogCreate = true;
             }">
                 Create
-            </v-btn> -->
+            </v-btn>
 
         </v-toolbar>
 
@@ -30,6 +30,9 @@
                         Value
                     </th>
                     <th class="text-left">
+                        Total accumulated
+                    </th>
+                    <th class="text-left">
                         Actions
                     </th>
                 </tr>
@@ -42,6 +45,8 @@
                         {{ item.name }}</td>
                     <td>{{ item.participants.length }} / {{ item.maxParticipants }}</td>
                     <td>{{ item.value }}</td>
+                    <td>{{ item.participants.length * item.value }}</td>
+
                     <td>
                         <v-btn v-show="item.participants.length < item.maxParticipants" @click="() => {
                             diaglogMapSelect = true
@@ -51,23 +56,23 @@
                             "> <v-icon>mdi-plus</v-icon> </v-btn>
                         <v-btn v-show="item.started" @click="viewTournament(item)"> View </v-btn>
                     </td>
-                    <td>
-
-                    </td>
                 </tr>
             </tbody>
         </v-table>
         <v-dialog v-model="dialogCreate">
             <v-card>
                 <v-card-text>
-                    <v-text-field v-model="selectTournament.name" label="name"></v-text-field>
+                    <v-text-field v-model="selectTournament.name" label="name"
+                        :rules="[value => !!value || 'value required']"></v-text-field>
                     <v-text-field v-model="selectTournament.maxParticipants" type="number"
+                        :rules="[value => !!value && value > 1 || 'must be greater than 1']"
                         label="participants"></v-text-field>
-                    <v-text-field v-model="selectTournament.value" prefix="$" type="number" label="value"></v-text-field>
+                    <v-text-field v-model="selectTournament.value" prefix="$" type="number" label="value" suffix="USD"
+                        :rules="[value => !!value && value > 0 || 'must be greater than 0']"></v-text-field>
 
                 </v-card-text>
                 <v-card-actions class="justify-center">
-                    <v-btn @click="createTournament()">
+                    <v-btn @click="createTournament()" variant="elevated" color="primary">
                         Create
                     </v-btn>
                 </v-card-actions>
@@ -108,7 +113,7 @@ let { data, error } = await supabase
 
 tournaments.value = data
 
-const tournamentsChannel = supabase.channel('custom-all-channel')
+supabase.channel('custom-all-channel')
     .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tournaments' },
@@ -146,7 +151,6 @@ async function addParticipant() {
                 owner: accounts[0],
                 airballoonId: store.airBalloon.id,
                 point: store.InfoWheather.location,
-                kilometers: 0,
                 step: store.InfoWheather.speed / 3600,
                 state: 'LIVE',
                 route: [[store.InfoWheather.location, store.InfoWheather.location]],
@@ -156,13 +160,15 @@ async function addParticipant() {
                 .from('tournaments')
                 .upsert(selectTournament.value)
 
+            diaglogMapSelect.value = false
+
             if (selectTournament.value.participants.length == selectTournament.value.maxParticipants) {
                 await useFetch('/tournaments/startTournament', {
                     method: "POST", body: selectTournament.value
                 })
                 alert('Tournament started')
             }
-            diaglogMapSelect.value = false
+
         }
     } catch (error) {
         alert(error)
@@ -191,7 +197,7 @@ async function viewTournament(tournament) {
         query: {
             id: tournament.id,
         }
-    },{replace: true})
+    }, { replace: true })
 
 }
 
