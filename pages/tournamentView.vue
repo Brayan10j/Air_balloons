@@ -94,6 +94,7 @@ function setIntervals() {
 }
 
 async function getAirBalloons() {
+    winnerTournament.value = undefined
     let { data, error } = await supabase
         .from('airballoons')
         .select(`*`)
