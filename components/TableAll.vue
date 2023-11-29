@@ -50,36 +50,8 @@
 <script setup>
 
 const store = useMainStore()
-
 const props = defineProps(["data"])
 
-
-const airBalloons = computed(() => props.data)
-
-
-/* const intervals = ref([])
-
-
-function setIntervals() {
-    intervals.value.forEach(interval => clearInterval(interval));
-    intervals.value = airBalloons.value
-        .filter(a1 => a1.state).map(a => setInterval(() => {
-            a.kilometers += a.step
-        }, 1000))
-}
-
-
-
-
-onActivated(async () => {
-    setIntervals()
-})
-
-onMounted(() => {
-    setIntervals()
-
-})
- */
 async function viewAirBalloon(item) {
     try {
         const weather = await useWeather(item.point)

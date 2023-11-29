@@ -189,10 +189,6 @@ onActivated(async () => {
     await getAirBalloons()
 })
 
-onMounted(async () => {
-    await getAirBalloons()
-})
-
 </script>
 
 <style></style>

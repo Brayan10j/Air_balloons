@@ -35,19 +35,25 @@
                             Reward :
                             <v-chip class="mr-2" color="green"> {{
                                 tournament.value *
-                                tournament.participants.length }}</v-chip> </v-toolbar>
+                                tournament.participants.length }}</v-chip>
+
+                        </v-toolbar>
+
+                        <v-card-subtitle v-if="winnerTournament !== undefined">
+                            FINISHED
+                            <br>
+
+                            Winner : {{ winnerTournament.airBalloon.owner }}
+
+                        </v-card-subtitle>
+
+                        <v-card-actions class="justify-center" v-show="winnerTournament !== undefined"> <v-btn
+                                variant="outlined" @click="claimTournament()">
+                                claim
+                            </v-btn> </v-card-actions>
+
                     </v-card-text>
 
-
-
-                    <v-card-subtitle v-show="winnerTournament !== undefined">
-                        FINISHED
-
-                    </v-card-subtitle>
-                    <v-card-actions class="justify-center" v-show="winnerTournament !== undefined"> <v-btn
-                            variant="outlined" @click="claimTournament()">
-                            claim
-                        </v-btn> </v-card-actions>
                     <v-card-text>
                         Live Airballoons
                         <TableAll :data="winners" />
@@ -81,7 +87,7 @@ const winnerTournament = ref(undefined)
 const losers = ref([])
 const intervals = ref([])
 const tournament = ref({
-    participants : []
+    participants: []
 })
 
 

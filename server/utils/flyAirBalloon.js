@@ -133,6 +133,4 @@ export const useFlyAirBalloon = async (supabase, airBallon) => {
     airBallon.state = "STOPPED";
     await supabase.from("airballoons").update(airBallon).eq("id", airBallon.id);
   }
-
-  return "bien";
 };
