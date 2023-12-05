@@ -65,8 +65,8 @@
                             </v-card-text>
                         </v-card>
                     </v-col>
-                    <v-col cols="12" v-show="store.airBalloonSelected.tournamentID !== null" >
-                        <v-btn block  @click="async () => {
+                    <v-col cols="12" v-show="store.airBalloonSelected.tournamentID !== null">
+                        <v-btn block @click="async () => {
                             await navigateTo({
                                 path: '/tournamentView',
                                 query: {

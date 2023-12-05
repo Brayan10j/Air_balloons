@@ -58,7 +58,17 @@ const airBallons = [
   },
 ];
 
+
+
 export const useFlyAirBalloon = async (supabase, airBallon) => {
+  const updateAirBalloon = async (airBalloon) => {
+    await supabase
+      .from("airballoons")
+      .update(airBalloon)
+      .eq("id", airBalloon.id);
+  };
+
+
   try {
     let infoWeather = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${airBallon.point[1]}&lon=${airBallon.point[0]}&appid=704e6c6ad29a17b1a787bd035c725346&units=metric`
@@ -75,10 +85,7 @@ export const useFlyAirBalloon = async (supabase, airBallon) => {
       windSpeed > test.conditions.windSpeed[1]
     ) {
       airBallon.state = "COLLAPSE";
-      await supabase
-        .from("airballoons")
-        .update(airBallon)
-        .eq("id", airBallon.id);
+      await updateAirBalloon(airBallon)
     } else {
       let destination = turf.destination(
         airBallon.point,
@@ -121,16 +128,13 @@ export const useFlyAirBalloon = async (supabase, airBallon) => {
       airBallon.step = windSpeed / 3600;
 
       setTimeout(async () => {
-        await supabase
-          .from("airballoons")
-          .update(airBallon)
-          .eq("id", airBallon.id);
+        await updateAirBalloon(airBallon)
         useFlyAirBalloon(supabase, airBallon);
       }, steps * 1000);
     }
   } catch (error) {
     console.log(error);
     airBallon.state = "STOPPED";
-    await supabase.from("airballoons").update(airBallon).eq("id", airBallon.id);
+    await updateAirBalloon(airBallon)
   }
 };

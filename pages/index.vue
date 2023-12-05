@@ -69,7 +69,6 @@ async function getAirBalloons() {
     .is('tournamentID', null)
     .not('state', 'is', null)
     .not('state', 'eq', "STOPPED")
-    //.not()
 
   userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
   dataSource.value.features = userAirBallons.value.filter((t) => t.state == 'LIVE').map(a => ({
