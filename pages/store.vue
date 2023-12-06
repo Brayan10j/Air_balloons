@@ -1,48 +1,37 @@
 <template>
     <v-container>
         <v-row>
-            <v-btn rounded class="mx-auto" variant="elevated" color="primary" @click="mintAirBalloon()"> MINT
-            </v-btn>
-        </v-row>
-        <v-row>
-            <v-col v-for="(a, i) in store.airBalloons" :key="i">
-                <v-card class="mx-auto text-center" width="200">
-                    <v-card-title>
-                        <v-img width="100" class="mx-auto" :src="a.image" contain></v-img>
-                    </v-card-title>
-                    <v-card-subtitle> Conditions </v-card-subtitle>
-                    <v-card-text class="text-center justify-center">
-                        <v-chip-group class="justify-center">
-                            <v-chip>
-                                <v-icon>mdi-thermometer</v-icon>
-                                {{ a.conditions.temp[0] }} to {{
-                                    a.conditions.temp[1] }} &deg;C
-                            </v-chip>
-
-                            <v-chip>
-                                <v-icon>mdi-water</v-icon>
-                                {{ a.conditions.humidity[0] }} to {{
-                                    a.conditions.humidity[1] }} %
-                            </v-chip>
-                            <v-chip>
-                                <v-icon>mdi-speedometer</v-icon>
-                                {{ a.conditions.windSpeed[0] }} to {{
-                                    a.conditions.windSpeed[1] }} km/h
-                            </v-chip>
-                        </v-chip-group>
-                    </v-card-text>
-                </v-card>
+            <v-col cols="12" class="text-center"> <v-btn rounded class="mx-auto justify-center" variant="elevated"
+                    color="primary" @click="mintAirBalloon()">
+                    MINT
+                </v-btn></v-col>
+            <v-col v-for="(a, i) in store.airBalloons" :key="i" lg="4" xl="2">
+                <AirBalloonCard :airBalloon="a" />
             </v-col>
-
         </v-row>
-
+        <v-dialog v-model="dialog">
+            <AirBalloonCard :airBalloon="airBalloon" />
+        </v-dialog>
     </v-container>
 </template>
 
 <script setup>
 
+/* 
+import Web3 from 'web3';
+const web3 = new Web3(window.ethereum)
+
+const contract = new web3.eth.Contract(abi.default, "");
+await contract.methods
+          .buyNFT(NFT.id)
+          .send({ from: this.userAccount, value: value }); */
+
 const store = useMainStore()
 const supabase = useSupabaseClient()
+
+const dialog = ref(false)
+
+const airBalloon = ref({})
 
 
 async function mintAirBalloon() {
@@ -50,17 +39,20 @@ async function mintAirBalloon() {
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
-        
-        const airBalloon =  store.airBalloons[Math.floor(Math.random() * 6)]
+
+        airBalloon.value = store.airBalloons[Math.floor(Math.random() * 6)]
+
+        dialog.value = true
         const { data, error } = await supabase
             .from("airballoons")
             .insert({
                 owner: accounts[0],
-                airballoonId: airBalloon.id,
+                airballoonId: airBalloon.value.id,
             })
             .select()
         alert("Airballoon minted")
-        await navigateTo('/mapAdd')
+        dialog.value = false
+        await navigateTo('/mapAdd') 
     } catch (error) {
         alert(error)
     }

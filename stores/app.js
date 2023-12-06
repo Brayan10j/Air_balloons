@@ -21,13 +21,7 @@ export const useMainStore = defineStore("main", {
         windSpeed: [0, 35],
       },
     },
-    airBalloonSelected: {
-      airballoonId: "1",
-      route: [],
-      point: [0, 0],
-      image: "/Globos/1.png",
-      kilometers: 0,
-    },
+    airBalloonSelected: undefined,
     airBalloons: [
       {
         id: "1",
@@ -92,11 +86,14 @@ export const useMainStore = defineStore("main", {
     setAirBalloon(item) {
       clearInterval(this.intervalID);
       this.airBalloonSelected = item;
-      this.airBalloon = this.airBalloons[parseInt(this.airBalloonSelected.airballoonId) - 1];
-      if (this.airBalloonSelected.state == "LIVE" ) {
-        this.intervalID = setInterval(() => {
-          this.airBalloonSelected.kilometers += this.airBalloonSelected.step;
-        }, 1000);
+      if (this.airBalloonSelected !== undefined) {
+        this.airBalloon =
+          this.airBalloons[parseInt(this.airBalloonSelected.airballoonId) - 1];
+        if (this.airBalloonSelected.state == "LIVE") {
+          this.intervalID = setInterval(() => {
+            this.airBalloonSelected.kilometers += this.airBalloonSelected.step;
+          }, 1000);
+        }
       }
     },
     setInfoWheather(item) {

@@ -1,19 +1,13 @@
 <template>
-    <v-table fixed-header>
+    <v-table fixed-header height="50vh" w>
         <thead>
             <tr>
 
                 <th class="text-left">
                     Air-balloon
                 </th>
-                <th class="text-left">
-                    Humidity %
-                </th>
-                <th class="text-left">
-                    Temperature &deg;C
-                </th>
-                <th class="text-left">
-                    Speed Km/h
+                <th class="text-center">
+                    Conditions
                 </th>
                 <th class="text-left">
                     Actions
@@ -24,11 +18,8 @@
             <tr v-for="item in airBalloons" :key="item.id">
 
                 <td><v-avatar :image="`/Globos/${item.info.id}.png`"></v-avatar></td>
-                <td>{{ item.info.conditions.humidity }}
-                </td>
-                <td>{{ item.info.conditions.temp }}
-                </td>
-                <td>{{ item.info.conditions.windSpeed }}
+                <td>
+                    <ConditionsChips :item="item.info" />
                 </td>
                 <td>
                     <v-btn size="small" color="primary" @click="selectAirBalloon(item)">
@@ -76,6 +67,7 @@ async function getAirBalloons() {
             airBalloons.value = data.map(a => {
                 return { airBalloon: a, info: store.airBalloons[parseInt(a.airballoonId) - 1] }
             })
+            //store.setInfoAirBalloon(store.airBalloons[parseInt(data[0].airballoonId) - 1])
         }
 
 

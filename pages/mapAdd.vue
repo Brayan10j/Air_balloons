@@ -1,18 +1,20 @@
 <template>
     <v-container>
-        <v-row>
-            <v-col>
+        <v-row >
+            <v-col class="text-center">
                 <Bag />
             </v-col>
-            <v-col>
-                <v-card min-width="300">
+            <v-col v-show="store.airBalloonSelected">
+                <v-card min-width="300" >
                     <MapAdd :id-map="'mapAdd'" />
                 </v-card>
             </v-col>
+            <v-col cols="12" v-show="store.airBalloonSelected">
+                <v-btn color="blue" class="mx-auto"  @click="flyAirballon()" block>
+                    Go
+                </v-btn>
+            </v-col>
         </v-row>
-        <v-btn color="blue" class="mx-auto" @click="flyAirballon()">
-            Go
-        </v-btn>
     </v-container>
 </template>
 
@@ -96,7 +98,13 @@ async function flyAirballon() {
         alert(error.message)
     }
 
+
+
 }
+
+onActivated(async () => {
+    store.setAirBalloon(undefined);
+})
 
 </script>
 

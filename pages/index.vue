@@ -70,8 +70,10 @@ async function getAirBalloons() {
     .not('state', 'is', null)
     .not('state', 'eq', "STOPPED")
 
-  userAirBallons.value = data.sort((a, b) => b.kilometers - a.kilometers)
-  dataSource.value.features = userAirBallons.value.filter((t) => t.state == 'LIVE').map(a => ({
+  // filter records module
+
+  userAirBallons.value = data.filter((t) => t.state == 'LIVE').sort((a, b) => b.kilometers - a.kilometers)
+  dataSource.value.features = userAirBallons.value.map(a => ({
     type: 'Feature',
     geometry: {
       type: 'Point',

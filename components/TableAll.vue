@@ -1,5 +1,5 @@
 <template>
-    <v-table fixed-header>
+    <v-table fixed-header height="70vh">
         <thead>
             <tr>
                 <th class="text-left">
@@ -93,7 +93,5 @@ async function deleteAirBalloon(item) {
     }
 
 }
-
-
 
 </script>
