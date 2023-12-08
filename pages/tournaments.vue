@@ -48,10 +48,13 @@
                     <td>{{ item.participants.length * item.value }}</td>
 
                     <td>
-                        <v-btn v-show="item.participants.length < item.maxParticipants" @click="() => {
-                            diaglogMapSelect = true
-                            selectTournament = item
-                            store.setInfoAirBalloon(store.airBalloons[Math.floor(Math.random() * 6)])
+                        <v-btn v-show="item.participants.length < item.maxParticipants" @click="async () => {
+                            await navigateTo({
+                                path: '/mapAdd',
+                                query: {
+                                    idTournament: item.id,
+                                }
+                            }, { replace: true })
                         }
                             "> <v-icon>mdi-plus</v-icon> </v-btn>
                         <v-btn v-show="item.started" @click="viewTournament(item)"> View </v-btn>

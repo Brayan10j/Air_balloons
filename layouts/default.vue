@@ -6,7 +6,7 @@
 
         Log in
       </v-btn>
-      <v-btn v-show="!unloged" rounded >
+      <v-btn v-show="!unloged" rounded to="/profile" >
         <v-icon color="grey"> mdi-account </v-icon>
         {{
           user.slice(0, 5) +
@@ -22,7 +22,7 @@
     <v-bottom-navigation grow>
       <v-btn to="/"> <v-icon>mdi-home</v-icon> </v-btn>
       <v-btn to="/store"> <v-icon>mdi-store</v-icon> </v-btn>
-      <v-btn to="/mapAdd"> <v-icon>mdi-airballoon-outline</v-icon> </v-btn>
+      <v-btn to="/mapAdd"> <v-icon>mdi-bag-personal-outline</v-icon> </v-btn>
       <v-btn to="/tournaments"> <v-icon>mdi-trophy-variant-outline</v-icon> </v-btn>
     </v-bottom-navigation>
   </v-app>

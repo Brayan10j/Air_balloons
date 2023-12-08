@@ -164,7 +164,7 @@ onActivated(async () => {
     const fechaMenosUnaHora = new Date();
     fechaMenosUnaHora.setHours(fechaMenosUnaHora.getHours() - 1);
     // reanudate symultaneus tournament item.tournamentID == null
-    if (new Date(store.airBalloonSelected.updated_at) < fechaMenosUnaHora && store.airBalloonSelected.state == 'LIVE') {
+    if (new Date(store.airBalloonSelected.updated_at) < fechaMenosUnaHora && store.airBalloonSelected.state == 'LIVE' && store.airBalloonSelected.updated_at !== null) {
         console.log("reanudate")
         $fetch('/reanudate', {
             method: 'POST',

@@ -42,7 +42,8 @@
     }
         ">
                         <template #marker>
-                            <img :src="`/Globos/${store.airBalloon.id}.png`" width="50">
+                            <img :src="`/Globos/${store.airBalloon == undefined ? '1' : store.airBalloon.id}.png`"
+                                width="50">
 
                         </template>
 

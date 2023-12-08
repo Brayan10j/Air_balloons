@@ -1,5 +1,5 @@
 <template>
-    <v-table fixed-header height="50vh" w>
+    <v-table fixed-header height="50vh">
         <thead>
             <tr>
 
@@ -17,9 +17,9 @@
         <tbody>
             <tr v-for="item in airBalloons" :key="item.id">
 
-                <td><v-avatar :image="`/Globos/${item.info.id}.png`"></v-avatar></td>
+                <td><v-avatar :image="`/Globos/${item.id}.png`"></v-avatar></td>
                 <td>
-                    <ConditionsChips :item="item.info" />
+                    <ConditionsChips :item="item" />
                 </td>
                 <td>
                     <v-btn size="small" color="primary" @click="selectAirBalloon(item)">
@@ -34,14 +34,14 @@
 <script setup>
 
 const store = useMainStore()
-const supabase = useSupabaseClient()
+const contract = useContractNFTs()
 
 const airBalloons = ref([])
 
 async function selectAirBalloon(item) {
-    //airBalloon.value = item
-    store.setInfoAirBalloon(item.info)
-    store.setAirBalloon(item.airBalloon);
+
+    store.setInfoAirBalloon(item)
+
     useMapbox("mapAdd", (map) => {
         const { lng, lat } = map.getCenter();
         useMapboxMarker("marker", (marker) => {
@@ -55,21 +55,16 @@ async function getAirBalloons() {
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
-        let { data, error } = await supabase
-            .from('airballoons')
-            .select('*')
-            .eq("owner", accounts[0])
-            .is('state', null)
-
-        if (data.length == 0) {
+        const res = await contract.methods.balanceOfBatch(
+            Array(6).fill(accounts[0]),
+            [1, 2, 3, 4, 5, 6]
+        ).call();
+        if (res.length == 0) {
             await navigateTo("/store")
         } else {
-            airBalloons.value = data.map(a => {
-                return { airBalloon: a, info: store.airBalloons[parseInt(a.airballoonId) - 1] }
-            })
+            airBalloons.value = res.map((n) => Number(n)).flatMap((quantity, i) => Array(quantity).fill(store.airBalloons[i]));
             //store.setInfoAirBalloon(store.airBalloons[parseInt(data[0].airballoonId) - 1])
         }
-
 
     } catch (error) {
         alert(error.message)

@@ -9,7 +9,7 @@
                 <AirBalloonCard :airBalloon="a" />
             </v-col>
         </v-row>
-        <v-dialog v-model="dialog">
+        <v-dialog v-model="dialog" persistent>
             <AirBalloonCard :airBalloon="airBalloon" />
         </v-dialog>
     </v-container>
@@ -17,48 +17,27 @@
 
 <script setup>
 
-/* 
-import Web3 from 'web3';
-const web3 = new Web3(window.ethereum)
-
-const contract = new web3.eth.Contract(abi.default, "");
-await contract.methods
-          .buyNFT(NFT.id)
-          .send({ from: this.userAccount, value: value }); */
-
 const store = useMainStore()
-const supabase = useSupabaseClient()
-
+const contract = useContractNFTs()
 const dialog = ref(false)
-
 const airBalloon = ref({})
-
 
 async function mintAirBalloon() {
     try {
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
-
         airBalloon.value = store.airBalloons[Math.floor(Math.random() * 6)]
-
         dialog.value = true
-        const { data, error } = await supabase
-            .from("airballoons")
-            .insert({
-                owner: accounts[0],
-                airballoonId: airBalloon.value.id,
-            })
-            .select()
+        await contract.methods
+            .mint(accounts[0], airBalloon.value.id, 1, [])
+            .send({ from: accounts[0] });
         alert("Airballoon minted")
         dialog.value = false
-        await navigateTo('/mapAdd') 
+        await navigateTo('/mapAdd')
     } catch (error) {
         alert(error)
     }
 }
-
-
-
 
 </script>

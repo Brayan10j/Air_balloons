@@ -12,15 +12,7 @@ export const useMainStore = defineStore("main", {
       speed: 0,
     },
 
-    airBalloon: {
-      id: "1",
-      image: "/Globos/1.png",
-      conditions: {
-        temp: [0, 50],
-        humidity: [0, 70],
-        windSpeed: [0, 35],
-      },
-    },
+    airBalloon: undefined,
     airBalloonSelected: undefined,
     airBalloons: [
       {
