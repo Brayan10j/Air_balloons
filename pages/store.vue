@@ -37,6 +37,7 @@ async function mintAirBalloon() {
         await navigateTo('/mapAdd')
     } catch (error) {
         alert(error)
+        dialog.value = false
     }
 }
 
