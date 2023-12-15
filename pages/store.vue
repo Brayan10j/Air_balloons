@@ -24,14 +24,12 @@ const airBalloon = ref({})
 
 async function mintAirBalloon() {
     try {
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
+        await useConnectWeb3()
         airBalloon.value = store.airBalloons[Math.floor(Math.random() * 6)]
         dialog.value = true
         await contract.methods
-            .mint(accounts[0], airBalloon.value.id, 1, [])
-            .send({ from: accounts[0] });
+            .mint(window.ethereum.selectedAddress, airBalloon.value.id, 1, [])
+            .send({ from: window.ethereum.selectedAddress });
         alert("Airballoon minted")
         dialog.value = false
         await navigateTo('/mapAdd')

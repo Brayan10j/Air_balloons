@@ -44,7 +44,10 @@ async function flyAirballon() {
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
-
+        await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x13881" }],
+        });
         if (route.query.idTournament) {
 
             overlay.value = true

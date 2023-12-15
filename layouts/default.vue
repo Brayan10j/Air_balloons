@@ -29,6 +29,8 @@
 </template>
 
 <script setup>
+import { useConnectWeb3 } from '~/composables/useConnectWeb3';
+
 const unloged = ref(true)
 const user = ref("")
 
@@ -43,9 +45,7 @@ async function login() {
     alert("MetaMask not installed  :(");
   } else {
     try {
-      let accounts = await window.ethereum.request({
-        method: "eth_requestAccounts"
-      });
+      await useConnectWeb3()
       unloged.value = false
       user.value = window.ethereum.selectedAddress
     } catch (error) {
