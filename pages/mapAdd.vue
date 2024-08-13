@@ -7,13 +7,13 @@
             <v-col class="text-center">
                 <Bag />
             </v-col>
-            <v-col v-show="store.airBalloon">
+            <v-col v-if="store.airBalloon">
                 <v-card min-width="300">
                     <MapAdd :id-map="'mapAdd'" />
                 </v-card>
             </v-col>
-            <v-col cols="12" v-show="store.airBalloon">
-                <v-btn color="blue" class="mx-auto" @click="flyAirballon()" block>
+            <v-col cols="12" v-if="store.airBalloon">
+                <v-btn color="blue" class="mx-auto" @click="flyAirballon" block>
                     Go
                 </v-btn>
             </v-col>
@@ -22,12 +22,12 @@
 </template>
 
 <script setup>
-
 const store = useMainStore()
 const supabase = useSupabaseClient()
 const route = useRoute()
+const router = useRouter()
 
-const contract = useContractNFTs()
+const { contractWithSigner } = useContractNFTs()
 
 const overlay = ref(false)
 
@@ -37,91 +37,80 @@ useMapboxBeforeLoad("mapAdd", async (map) => {
         map.setFog({}) // Set the default atmosphere style
     })
 })
-
 async function flyAirballon() {
+    overlay.value = true;
 
     try {
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-        await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x13881" }],
-        });
-        if (route.query.idTournament) {
+        await useConnectWeb3();
+        const contract = await contractWithSigner();
 
-            overlay.value = true
-            await contract.methods
-                .burn(accounts[0], store.airBalloon.id, 1)
-                .send({ from: accounts[0] });
-            let { data } = await supabase
+        const address = window.ethereum.selectedAddress;
+        const airBalloonId = store.airBalloon.id;
+        const location = store.InfoWheather.location;
+        const speed = store.InfoWheather.speed / 3600;
+        const tournamentId = route.query.idTournament;
+
+        await contract.burn(address, airBalloonId, 1);
+
+        if (tournamentId) {
+            // Handle tournament case
+            let { data: tournaments } = await supabase
                 .from('tournaments')
                 .select("*")
-                // Filters
-                .eq('id', route.query.idTournament)
+                .eq('id', tournamentId);
 
-            let tournament = data[0]
+            let tournament = tournaments[0];
             tournament.participants.push({
-                owner: accounts[0],
-                airballoonId: store.airBalloon.id,
-                point: store.InfoWheather.location,
-                step: store.InfoWheather.speed / 3600,
+                owner: address,
+                airballoonId: airBalloonId,
+                point: location,
+                step: speed,
                 state: 'LIVE',
-                route: [[store.InfoWheather.location, store.InfoWheather.location]],
-                tournamentID: route.query.idTournament
-            })
-            await supabase
-                .from('tournaments')
-                .upsert(tournament)
-
-            alert('Airballon added ')
-            if (tournament.participants.length == tournament.maxParticipants) {
-                await useFetch('/tournaments/startTournament', {
-                    method: "POST", body: tournament
-                })
-                alert('Tournament started')
-            }
-            overlay.value = false
-            await navigateTo('/tournaments')
-        } else {
-            overlay.value = true
-            await contract.methods
-                .burn(accounts[0], store.airBalloon.id, 1)
-                .send({ from: accounts[0] });
-            const { data } = await useFetch('/airballoon', {
-                method: "POST", body: {
-                    owner: accounts[0],
-                    airballoonId: store.airBalloon.id,
-                    point: store.InfoWheather.location,
-                    step: store.InfoWheather.speed / 3600,
-                    state: 'LIVE',
-                    route: [[store.InfoWheather.location, store.InfoWheather.location]],
-                }
-            })
-            //REVISAR EL NULLL
-            store.setAirBalloon(data);
-            alert("Airballoon put to flight successfully")
-            overlay.value = false
-            //store.setInfoWheather(await useWeather(store.InfoWheather.location))
-            useMapbox("mapView", (map) => {
-                map.jumpTo({
-                    center: store.InfoWheather.location,
-                    zoom: 3,
-                });
-            })
-            useMapboxMarker("markerView", marker => {
-                marker.setLngLat(store.InfoWheather.location)
+                route: [[location, location]],
+                tournamentID: tournamentId,
             });
-            await navigateTo('/mapView')
+
+            await supabase.from('tournaments').upsert(tournament);
+            alert('Airballoon added');
+
+            if (tournament.participants.length === tournament.maxParticipants) {
+                await useFetch('/tournaments/startTournament', {
+                    method: "POST",
+                    body: tournament
+                });
+                alert('Tournament started');
+            }
+            router.push('/tournaments');
+        } else {
+            // Handle airballoon case
+            const { data } = await useFetch('/airballoon', {
+                method: "POST",
+                body: {
+                    owner: address,
+                    airballoonId: airBalloonId,
+                    point: location,
+                    step: speed,
+                    state: 'LIVE',
+                    route: [[location, location]],
+                }
+            });
+            store.setAirBalloon(data);
+            alert("Airballoon put to flight successfully");
+
+            useMapbox("mapView", map => map.jumpTo({
+                center: location,
+                zoom: 3
+            }));
+            useMapboxMarker("markerView", marker => marker.setLngLat(location));
+            router.push('/mapView');
         }
     } catch (error) {
-        alert(error.message)
-        overlay.value = false
+        alert(`Error: ${error.message}`);
+    } finally {
+        overlay.value = false;
     }
-
-
-
 }
+
 
 onActivated(async () => {
     store.setInfoAirBalloon(undefined);

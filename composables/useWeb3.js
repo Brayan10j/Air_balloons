@@ -1,13 +1,24 @@
-import Web3 from "web3";
+import { ethers } from "ethers";
 import abi from "~/assets/contract.json";
 
-// try import from pubilic folder
-
 export const useContractNFTs = () => {
-  //const {data } = await useFetch("/Contracts/ABIS/contract.json")
-  const web3 = new Web3(window.ethereum);
-  return new web3.eth.Contract(
-    abi,
-    "0x44152b5Cb390dC56B471c2dEd5fFD9D54B2d2483"
-  );
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("Ethereum provider not found. Please install MetaMask.");
+  }
+
+  // Conectar a Ethereum a través del proveedor de MetaMask
+  const provider = new ethers.BrowserProvider(window.ethereum);
+
+  // Direccion del contrato
+  const contractAddress = "0xd705aCe869e4530c9Add3ff4317CBd2F918bC0F8"; // sepolia
+
+  // Instancia del contrato usando solo el provider
+  const contract = new ethers.Contract(contractAddress, abi, provider);
+
+  const contractWithSigner = async () => {
+    const signer = await provider.getSigner();
+    return contract.connect(signer);
+  };
+
+  return { contract, provider, contractWithSigner };
 };

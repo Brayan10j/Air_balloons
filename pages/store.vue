@@ -1,16 +1,18 @@
 <template>
     <v-container>
         <v-row>
-            <v-col cols="12" class="text-center"> <v-btn rounded class="mx-auto justify-center" variant="elevated"
-                    color="primary" @click="mintAirBalloon()">
+            <v-col cols="12" class="text-center">
+                <v-btn rounded class="mx-auto justify-center" variant="elevated" color="primary"
+                    @click="mintAirBalloon">
                     MINT
-                </v-btn></v-col>
-            <v-col v-for="(a, i) in store.airBalloons" :key="i" lg="4" xl="2">
-                <AirBalloonCard :airBalloon="a" />
+                </v-btn>
+            </v-col>
+            <v-col v-for="(airBalloon, index) in store.airBalloons" :key="index" lg="4" xl="2">
+                <AirBalloonCard :airBalloon="airBalloon" />
             </v-col>
         </v-row>
         <v-dialog v-model="dialog" persistent>
-            <AirBalloonCard :airBalloon="airBalloon" />
+            <AirBalloonCard :airBalloon="selectedAirBalloon" />
         </v-dialog>
     </v-container>
 </template>
@@ -18,25 +20,37 @@
 <script setup>
 
 const store = useMainStore()
-const contract = useContractNFTs()
+const { contractWithSigner } = useContractNFTs()
 const dialog = ref(false)
-const airBalloon = ref({})
+const selectedAirBalloon = ref(null);
 
-async function mintAirBalloon() {
+
+const mintAirBalloon = async () => {
     try {
-        await useConnectWeb3()
-        airBalloon.value = store.airBalloons[Math.floor(Math.random() * 6)]
-        dialog.value = true
-        await contract.methods
-            .mint(window.ethereum.selectedAddress, airBalloon.value.id, 1, [])
-            .send({ from: window.ethereum.selectedAddress });
-        alert("Airballoon minted")
-        dialog.value = false
-        await navigateTo('/mapAdd')
+        await useConnectWeb3();
+        const contract = await contractWithSigner();
+
+        const randomIndex = Math.floor(Math.random() * store.airBalloons.length);
+        selectedAirBalloon.value = store.airBalloons[randomIndex];
+        dialog.value = true;
+
+        const tx = await contract.mint(
+            window.ethereum.selectedAddress,
+            selectedAirBalloon.value.id,
+            1,
+            '0x'
+        );
+        await tx.wait();
+
+        alert('Airballoon minted');
+        dialog.value = false;
+        router.push('/mapAdd');
     } catch (error) {
-        alert(error)
-        dialog.value = false
+        alert('Error minting airballoon');
+        console.error(error);
+        dialog.value = false;
     }
-}
+};
+
 
 </script>

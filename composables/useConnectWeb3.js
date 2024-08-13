@@ -1,34 +1,48 @@
 export const useConnectWeb3 = async () => {
+  const chainId = "0xaa36a7"; // Sepolia Testnet
+  const chainName = "Sepolia";
+  const rpcUrls = [
+    "wss://ethereum-sepolia-rpc.publicnode.com",
+    "https://eth-sepolia.api.onfinality.io/public",
+  ];
+
+  if (typeof window.ethereum === "undefined") {
+    console.error("Ethereum provider not found. Please install MetaMask.");
+    return;
+  }
+
   try {
-    await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x13881" }],
-    });
-  } catch (switchError) {
-    // This error code indicates that the chain has not been added to MetaMask.
-    if (switchError.code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [
-            {
-              chainId: "0x13881",
-              chainName: "Mumbai",
-              rpcUrls: [
-                "https://matic-mumbai.chainstacklabs.com",
-                "https://rpc-mumbai.matic.today",
-              ],
-            },
-          ],
-        });
-      } catch (addError) {
-        console.log(addError);
+    // Solicitar acceso a la cuenta del usuario
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+
+    try {
+      // Intentar cambiar a la cadena de Ethereum deseada
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId }],
+      });
+    } catch (switchError) {
+      // Si la cadena no está disponible en MetaMask, intenta agregarla
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId,
+                chainName,
+                rpcUrls,
+              },
+            ],
+          });
+        } catch (addError) {
+          console.error("Error adding Ethereum chain:", addError);
+        }
+      } else {
+        console.error("Error switching Ethereum chain:", switchError);
       }
-    } else {
-      console.log(switchError);
     }
+  } catch (error) {
+    console.error("Error connecting to Web3:", error);
   }
 };

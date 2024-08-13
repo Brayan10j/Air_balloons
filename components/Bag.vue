@@ -34,47 +34,44 @@
 <script setup>
 
 const store = useMainStore()
-const contract = useContractNFTs()
+const {contract,} = useContractNFTs()
+const router = useRouter()
 
 const airBalloons = ref([])
 
 async function selectAirBalloon(item) {
+    store.setInfoAirBalloon(item);
 
-    store.setInfoAirBalloon(item)
-
-    useMapbox("mapAdd", (map) => {
+    useMapbox("mapAdd", map => {
         const { lng, lat } = map.getCenter();
-        useMapboxMarker("marker", (marker) => {
-            marker.setLngLat([lng, lat])
-        })
-    })
+        useMapboxMarker("marker", marker => marker.setLngLat([lng, lat]));
+    });
 }
 
 async function getAirBalloons() {
-    try {
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-        const res = await contract.methods.balanceOfBatch(
-            Array(6).fill(accounts[0]),
-            [1, 2, 3, 4, 5, 6]
-        ).call();
-        if (res.length == 0) {
-            await navigateTo("/store")
-        } else {
-            airBalloons.value = res.map((n) => Number(n)).flatMap((quantity, i) => Array(quantity).fill(store.airBalloons[i]));
-            //store.setInfoAirBalloon(store.airBalloons[parseInt(data[0].airballoonId) - 1])
-        }
-
-    } catch (error) {
-        alert(error.message)
+  try {
+    await useConnectWeb3();
+    const res = await contract.balanceOfBatch(
+      Array(6).fill(window.ethereum.selectedAddress),
+      [1, 2, 3, 4, 5, 6]
+    );
+    if (!res.length) {
+      router.push("/store");
+    } else {
+      airBalloons.value = res
+        .map((n, i) => Array(Number(n)).fill(store.airBalloons[i]))
+        .flat();
     }
-
+  } catch (error) {
+    console.log(error)
+    alert(`Error: ${error.message}`);
+  }
 }
 
 onActivated(async () => {
     await getAirBalloons()
 })
+
 
 
 </script>

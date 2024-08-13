@@ -188,7 +188,7 @@ async function createTournament() {
     } catch (error) {
         alert(error)
     }
-
+    
 }
 
 
