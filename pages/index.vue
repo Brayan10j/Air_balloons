@@ -60,15 +60,35 @@ const mapLayer = {
   },
 }
 
-function updateIntervals() {
+// Helper function to clear existing intervals
+function clearExistingIntervals() {
   intervals.value.forEach(clearInterval)
-  intervals.value = userAirBallons.value
+  intervals.value = []
+}
+
+function startIntervals() {
+  clearExistingIntervals()
+  userAirBallons.value
     .filter(balloon => balloon.state === 'LIVE')
-    .map(balloon =>
-      setInterval(() => {
+    .forEach(balloon => {
+      const interval = setInterval(() => {
         balloon.kilometers += balloon.step
       }, 1000)
-    )
+      intervals.value.push(interval)
+    })
+}
+
+function updateMapFeatures() {
+  dataSource.value.features = userAirBallons.value.map(a => ({
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: a.point,
+    },
+    properties: {
+      'image-name': `/Globos/${a.airballoonId}.png`,
+    },
+  }))
 }
 
 async function fetchAirBalloons() {
@@ -79,45 +99,44 @@ async function fetchAirBalloons() {
     .not('state', 'is', null)
     .not('state', 'eq', 'STOPPED')
 
-  if (!error) {
-    userAirBallons.value = data.filter(t => t.state === 'LIVE').sort((a, b) => b.kilometers - a.kilometers)
-    dataSource.value.features = userAirBallons.value.map(a => ({
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: a.point,
-      },
-      properties: {
-        'image-name': `/Globos/${a.airballoonId}.png`,
-      },
-    }))
-    updateIntervals()
+  if (error) {
+    console.error('Error fetching air balloons:', error)
+    return
   }
+
+  userAirBallons.value = data.filter(t => t.state === 'LIVE').sort((a, b) => b.kilometers - a.kilometers)
+  updateMapFeatures()
+  startIntervals()
 }
 
-await fetchAirBalloons()
 
-supabase.channel('custom-all-channel')
-  .on(
-    'postgres_changes',
-    { event: '*', schema: 'public', table: 'airballoons' },
-    async (payload) => {
-      if (payload.eventType === 'UPDATE') {
-        const index = userAirBallons.value.findIndex(item => item.id === payload.new.id)
-        if (index !== -1) {
-          userAirBallons.value[index] = payload.new
-        } else {
-          await fetchAirBalloons()
-        }
-      } else {
-        await fetchAirBalloons()
-      }
-      updateIntervals()
+
+
+async function handleRealtimeUpdates(payload) {
+  if (payload.eventType === 'UPDATE') {
+    const index = userAirBallons.value.findIndex(item => item.id === payload.new.id)
+    if (index !== -1) {
+      userAirBallons.value[index] = payload.new
+    } else {
+      await fetchAirBalloons()
     }
-  )
-  .subscribe()
+  }
+  startIntervals()
+}
 
-  useMapboxBeforeLoad('map', (map) => {
+function subscribeToUpdates() {
+  supabase.channel('custom-all-channel')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'airballoons' },
+      handleRealtimeUpdates
+    )
+    .subscribe()
+}
+
+
+
+useMapboxBeforeLoad('map', (map) => {
   map.on('style.load', () => {
     map.setFog({})
   })
@@ -135,8 +154,13 @@ supabase.channel('custom-all-channel')
 onActivated(fetchAirBalloons)
 
 
-/* onDeactivated(() => {
-  intervals.value.forEach(interval => clearInterval(interval));
-}) */
+onMounted(async () => {
+  await fetchAirBalloons()
+  subscribeToUpdates()
+})
+
+watch(userAirBallons, updateMapFeatures, { deep: true })
+
+onDeactivated(clearExistingIntervals) 
 
 </script>

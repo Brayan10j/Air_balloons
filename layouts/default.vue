@@ -2,14 +2,7 @@
   <v-app>
     <v-app-bar color="transparent" scroll-behavior="hide" flat>
       <v-spacer />
-      <v-btn
-        v-if="unlogged"
-        @click="login()"
-        rounded
-        variant="outlined"
-        size="small"
-        class="mr-2"
-      >
+      <v-btn v-if="unlogged" @click="login()" rounded variant="outlined" size="small" class="mr-2">
         Log in
       </v-btn>
       <v-btn v-else rounded to="/profile">
@@ -35,32 +28,36 @@
 
 <script setup>
 
+// Variables reactivas
 const unlogged = ref(true);
 const user = ref("");
 
+// Computed para formatear el nombre de usuario
 const formattedUser = computed(() => {
-  return user.value
-    ? `${user.value.slice(0, 5)}...${user.value.slice(-3)}`
-    : "";
+  if (!user.value) return "";
+  return `${user.value.slice(0, 5)}...${user.value.slice(-3)}`;
 });
 
-async function login() {
-  if (!window.ethereum) {
-    alert("MetaMask not installed :(");
-    return;
-  }
-
+// Función para manejar el inicio de sesión
+const login = async () => {
   try {
-    await useConnectWeb3(); 
-    unlogged.value = false;
-    user.value = window.ethereum.selectedAddress;
+    await useConnectWeb3(); // Conectar con la función de Web3
+    const selectedAddress = window.ethereum?.selectedAddress;
+
+    if (selectedAddress) {
+      user.value = selectedAddress;
+      unlogged.value = false;
+    } else {
+      throw new Error("No address selected");
+    }
   } catch (error) {
-    alert("Login failed!");
+    console.error("Login failed:", error); // Mostrar el error en la consola para más detalle
+    alert("Login failed! Please try again.");
     unlogged.value = true;
   }
-}
+};
 
-onMounted(() => {
-  login();
-});
+// Llamar al inicio de sesión al montar el componente
+onMounted(login);
+
 </script>

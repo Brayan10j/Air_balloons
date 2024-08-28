@@ -34,7 +34,7 @@
 <script setup>
 
 const store = useMainStore()
-const {contract,} = useContractNFTs()
+const { contract } = useContractNFTs()
 const router = useRouter()
 
 const airBalloons = ref([])
@@ -49,23 +49,23 @@ async function selectAirBalloon(item) {
 }
 
 async function getAirBalloons() {
-  try {
-    await useConnectWeb3();
-    const res = await contract.balanceOfBatch(
-      Array(6).fill(window.ethereum.selectedAddress),
-      [1, 2, 3, 4, 5, 6]
-    );
-    if (!res.length) {
-      router.push("/store");
-    } else {
-      airBalloons.value = res
-        .map((n, i) => Array(Number(n)).fill(store.airBalloons[i]))
-        .flat();
+    try {
+        await useConnectWeb3();
+        const res = await contract.balanceOfBatch(
+            Array(6).fill(window.ethereum.selectedAddress),
+            [1, 2, 3, 4, 5, 6]
+        );
+        if (!res.length) {
+            router.push("/store");
+        } else {
+            airBalloons.value = res
+                .map((n, i) => Array(Number(n)).fill(store.airBalloons[i]))
+                .flat();
+        }
+    } catch (error) {
+        console.log(error)
+        alert(`Error: ${error.message}`);
     }
-  } catch (error) {
-    console.log(error)
-    alert(`Error: ${error.message}`);
-  }
 }
 
 onActivated(async () => {

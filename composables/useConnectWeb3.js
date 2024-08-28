@@ -11,20 +11,21 @@ export const useConnectWeb3 = async () => {
     return;
   }
 
-  try {
-    // Solicitar acceso a la cuenta del usuario
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-
+  const connect = async () => {
     try {
+      // Solicitar acceso a la cuenta del usuario
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      
       // Intentar cambiar a la cadena de Ethereum deseada
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId }],
       });
-    } catch (switchError) {
-      // Si la cadena no está disponible en MetaMask, intenta agregarla
-      if (switchError.code === 4902) {
+
+    } catch (error) {
+      if (error.code === 4902) {
         try {
+          // Si la cadena no está disponible, intenta agregarla
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [
@@ -39,10 +40,22 @@ export const useConnectWeb3 = async () => {
           console.error("Error adding Ethereum chain:", addError);
         }
       } else {
-        console.error("Error switching Ethereum chain:", switchError);
+        console.error("Error connecting to Web3:", error);
       }
     }
-  } catch (error) {
-    console.error("Error connecting to Web3:", error);
-  }
+  };
+
+  // Llamar la función de conexión inicial
+  await connect();
+
+  // Detectar cambios en la cuenta y en la red
+  window.ethereum.on("accountsChanged", async (accounts) => {
+    console.log("Cuentas cambiadas:", accounts);
+    await connect(); // Volver a solicitar acceso y cambiar la cadena
+  });
+
+  window.ethereum.on("chainChanged", async (chainId) => {
+    console.log("Red cambiada:", chainId);
+    await connect(); // Volver a solicitar acceso y cambiar la cadena
+  });
 };
