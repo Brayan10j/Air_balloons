@@ -15,13 +15,12 @@ export const useConnectWeb3 = async () => {
     try {
       // Solicitar acceso a la cuenta del usuario
       await window.ethereum.request({ method: "eth_requestAccounts" });
-      
+
       // Intentar cambiar a la cadena de Ethereum deseada
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId }],
       });
-
     } catch (error) {
       if (error.code === 4902) {
         try {

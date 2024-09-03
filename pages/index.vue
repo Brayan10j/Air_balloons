@@ -31,7 +31,7 @@ const intervals = ref([])
 const mapOptions = {
   style: 'mapbox://styles/mapbox/satellite-streets-v11',
   center: [0, 0],
-  zoom: 0.1,
+  zoom: 1,
   projection: 'globe',
   attributionControl: false,
   renderWorldCopies: false,

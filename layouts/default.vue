@@ -12,17 +12,20 @@
     </v-app-bar>
     <v-main>
       <slot />
+
     </v-main>
-    <v-bottom-navigation grow>
-      <v-btn to="/"> <v-icon>mdi-home</v-icon> </v-btn>
-      <v-btn to="/store"> <v-icon>mdi-store</v-icon> </v-btn>
-      <v-btn to="/mapAdd">
-        <v-icon>mdi-bag-personal-outline</v-icon>
-      </v-btn>
-      <v-btn to="/tournaments">
-        <v-icon>mdi-trophy-variant-outline</v-icon>
-      </v-btn>
-    </v-bottom-navigation>
+    <v-footer> <v-bottom-navigation grow>
+        <v-btn to="/"> <v-icon>mdi-home</v-icon> </v-btn>
+        <v-btn to="/store"> <v-icon>mdi-store</v-icon> </v-btn>
+        <v-btn to="/mapAdd">
+          <v-icon>mdi-bag-personal-outline</v-icon>
+        </v-btn>
+        <v-btn to="/tournaments">
+          <v-icon>mdi-trophy-variant-outline</v-icon>
+        </v-btn>
+      </v-bottom-navigation></v-footer>
+
+
   </v-app>
 </template>
 
